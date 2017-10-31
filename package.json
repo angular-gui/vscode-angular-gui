@@ -1,0 +1,60 @@
+{
+  "name": "angular-gui",
+  "displayName": "Angular GUI Extension",
+  "description": "Run Angular CLI from your browser",
+  "version": "0.0.1",
+  "publisher": "sasxa.net",
+  "engines": {
+    "vscode": "^1.17.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/.angular-cli.json",
+    "*"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.connectOffline",
+        "title": "Angular GUI: Start in Offline mode"
+      },
+      {
+        "command": "extension.connectOnline",
+        "title": "Angular GUI: Start in Online mode"
+      },
+      {
+        "command": "extension.disconnect",
+        "title": "Angular GUI: Stop"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "sh build.sh",
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "@types/express": "^4.0.39",
+    "@types/mocha": "^2.2.42",
+    "@types/node": "^7.0.43",
+    "@types/shelljs": "^0.7.5",
+    "@types/socket.io": "^1.4.31",
+    "awesome-typescript-loader": "^3.2.3",
+    "source-map-loader": "^0.2.3",
+    "typescript": "^2.5.3",
+    "vscode": "^1.1.5",
+    "webpack-node-externals": "^1.6.0"
+  },
+  "dependencies": {
+    "express": "^4.16.2",
+    "shelljs": "^0.7.8",
+    "socket.io": "^2.0.4",
+    "stoppable": "^1.0.4"
+  }
+}
