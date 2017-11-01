@@ -14,7 +14,7 @@ export const config = {
 };
 
 export interface Command {
-  name: string;
+  label: string;
   value: string;
   type: string;
   options: { [ key: string ]: string };

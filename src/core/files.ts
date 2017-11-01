@@ -2,21 +2,23 @@ import * as fs from 'fs';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as shell from 'shelljs';
-import * as vscode from 'vscode';
 
-let rootPath;
+// import * as vscode from 'vscode';
+// const vscode = require('vscode');
+let ROOT;
 
 export function root() {
-  if (!rootPath) {
+  if (!ROOT) {
     try {
-      const rootUri = vscode.workspace.workspaceFolders[ 0 ];
-      rootPath = path.resolve(rootUri.uri.fsPath);
+      const rootUri = require('vscode').workspace.workspaceFolders[ 0 ];
+      ROOT = path.resolve(rootUri.uri.fsPath);
+      throw null;
     } catch  {
-      rootPath = path.resolve(__dirname, '..', '..');
+      ROOT = path.resolve('.');
     }
   }
 
-  return rootPath;
+  return ROOT;
 }
 
 export function resolve(...values) {
@@ -119,23 +121,24 @@ export async function updateJson<T>(filepath, transform: (o: T) => T, backup = f
 
 export function createRunnerScript(rootDir) {
   const script = `script=$1\nshift\nsh ${ rootDir }/commands/$script.sh $@`;
-  return writeFile(`${ rootDir }/commands/.run.sh`, script);
+  return writeFile(`${ rootDir }/.run.sh`, script);
 }
 
-export const cliConfig = () => {
-  return readFile('.angular-cli.json');
-  // return require(resolve('.angular-cli.json'));
-};
+export function hasRunnerScript(rootDir) {
+  return existsp(`${ rootDir }/.run.sh`);  
+}
+
+export function saveCommandScript() {
+}
 
 export async function test() {
-  console.log('testing file system', root());
-  console.log('testing file system', path.resolve('node_modules/.ng-gui'));
-  console.log('testing file system', resolve('node_modules/.ng-gui'));
+  console.log('testing file system', path.resolve('.'));
+  // console.log('testing file system', path.resolve('node_modules/.ng-gui'));
+  // console.log('testing file system', resolve('node_modules/.ng-gui'));
   // console.log(await fofDelete('.ng-gui'));
   // console.log(typeof await copyFile('.ng-gui/commands/test.sh', '.ng-gui'));
   // const data = [ 12, 3, 'abc', null ];
-  console.log(await readFiles('src/test/*'));
-
+  // console.log(await readFiles('src/test/*'));
 
   // fs.exists(resolve('.ng-gui'), (exists) => {
   //   console.log(exists);

@@ -21,7 +21,7 @@ module.exports = {
     extensions: [ ".ts", ".js" ],
     modules: [
       // path.resolve('src'),
-      // path.join(__dirname, 'js'),
+      path.join(__dirname, 'js'),
       'node_modules',
     ]
   },
