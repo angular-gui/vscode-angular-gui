@@ -1,4 +1,10 @@
-import { sort, type } from './utils';
+import { sort, type } from '../core/utils';
+
+const blueprint = {
+  name: 'blueprint',
+  type: String,
+  description: 'Generates the specified blueprint.'
+};
 
 export const generate = {
   name: 'generate',
@@ -6,6 +12,7 @@ export const generate = {
   aliases: [ 'g' ],
 
   availableOptions: [
+    blueprint,
     {
       name: 'dry-run',
       type: Boolean,

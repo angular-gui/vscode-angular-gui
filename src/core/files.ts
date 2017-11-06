@@ -1,151 +1,141 @@
-import * as fs from 'fs';
-import * as glob from 'glob';
-import * as path from 'path';
-import * as shell from 'shelljs';
+import * as helpers from './helpers';
 
-// import * as vscode from 'vscode';
-// const vscode = require('vscode');
-let ROOT;
+import { join } from 'path';
 
-export function root() {
-  if (!ROOT) {
-    try {
-      const rootUri = require('vscode').workspace.workspaceFolders[ 0 ];
-      ROOT = path.resolve(rootUri.uri.fsPath);
-      throw null;
-    } catch  {
-      ROOT = path.resolve('.');
-    }
+/**
+ * Exposes file system commands for specific files
+ */
+export class FilesManager {
+  workspaceRoot;
+  extensionRoot;
+  commandsFolder;
+  workspaceFolder;
+
+  constructor(config) {
+    this.workspaceRoot = config.workspaceRoot;
+    this.workspaceFolder = join(config.workspaceRoot, config.rootDir);
+    this.commandsFolder = join(this.workspaceFolder, 'commands');
+    this.extensionRoot = config.extensionRoot;
   }
 
-  return ROOT;
-}
+  createRunnerScript() {
+    const data = `script=$1\nshift\nsh ${ this.commandsFolder }/$script.sh $@`;
+    const filename = `${ this.workspaceFolder }/.run.sh`;
+    return helpers.writeFile(filename, data);
+  }
 
-export function resolve(...values) {
-  return path.resolve(root(), ...values);
-}
+  saveClientConfig(data) {
+    const filename = `${ this.extensionRoot }/.angular-gui.json`;
+    return helpers.writeFile(filename, data);
+  }
 
-//////////////////////////////////////////////////////////////
-//#region fs helpers
+  deleteClientConfig() {
+    const filename = `${ this.extensionRoot }/.angular-gui.json`;
+    return helpers.unlinkp(filename);
+  }
 
-function existsp(o) {
-  return new Promise(res => {
-    fs.exists(resolve(o), (exists) => res(exists));
-  });
-}
+  saveCommand(name, data) {
+    const filename = `${ this.commandsFolder }/${ name }.sh`;
+    return helpers.writeFile(filename, data);
+  }
 
-function globp(o) {
-  return new Promise(res => {
-    glob(`${ root() }/${ o }`, (error, matches) => res(error || matches));
-  });
-}
+  deleteCommand(name) {
+    const filename = `${ this.commandsFolder }/${ name }.sh`;
+    return helpers.unlinkp(filename);
+  }
 
-async function mkdirp(o) {
-  return await existsp(o)
-    ? true
-    : await mkdirp(path.dirname(o))
-      .then(() => new Promise(res =>
-        fs.mkdir(resolve(o), (error) => res(error || true))));
-}
+  get hasRunnerScript() {
+    const filename = `${ this.workspaceFolder }/.run.sh`;
+    return helpers.existsp(filename);
+  }
 
-async function readFilep(o) {
-  return new Promise(res =>
-    fs.readFile(resolve(o), 'utf-8', (error, data) => res(null || data)));
-}
+  get cliConfig() {
+    const filename = `${ this.workspaceRoot }/.angular-cli.json`;
+    return helpers.readFile(filename);
+  }
 
-async function rmdirp(o) {
-  return await existsp(o)
-    ? new Promise(res =>
-      fs.rmdir(resolve(o), (error) => res(error || true)))
-    : true;
-}
+  get clientConfig() {
+    const filename = `${ this.extensionRoot }/.angular-gui.json`;
+    return helpers.readFile(filename);
+  }
 
-async function unlinkp(o) {
-  return (await existsp(o))
-    ? new Promise(res =>
-      fs.unlink(resolve(o), (error) => res(error || true)))
-    : true;
-}
+  get guiCommands() {
+    return helpers.readFiles(this.commandsFolder, '*');
+  }
 
-//#endregion
-//////////////////////////////////////////////////////////////
+  //#region TODO: delete
+  // get ngSchematics() {
+  //   return readFile(`${ this.workspaceRoot }/node_modules/@schematics/angular/collection.json`);
+  // }
 
-export async function copyFile(filapath, folder) {
-  const target = path.join(folder, path.basename(filapath));
-  return writeFile(target, await readFilep(filapath));
-}
+  // getCollection(collection) {
+  //   return readFiles(`${ this.workspaceRoot }/node_modules/${ collection }`, '**/collection.json')
+  //     .then(data => data
+  //       ? data[ 0 ][ 'collection.json' ]
+  //       : data)
+  //     .then(data => data
+  //       ? this.processSchematics({ collection, ...data })
+  //       : data)
+  // }
 
-export async function copyFolder(folderFrom, folderTo) {
-  const files = await globp(`${ folderFrom }/**/*`) as string[];
-  if (!files.length) { return files; }
+  // private unwrapExtends(data, base) {
+  //   if (!data.extends || data.schema) { return data; }
 
-  const target = resolve(folderTo);
-  const folder = await mkdirp(target);
-  if (folder !== true) { return folder; }
+  //   const [ collection, name ] = data.extends.split(':');
+  //   return { ...data, ...base.schematics[ name ] };
+  // }
 
-  shell.cp('-Ru', files, target);
-}
+  // private unwrapSchema(collection, name) {
+  //   const collectionFolder
+  //     = `${ this.workspaceRoot }/node_modules/${ collection }`;
 
-export async function readFile(filepath) {
-  const data = await readFilep(filepath) as string;
-  return /^[\{|\[]/.test(data)
-    ? JSON.parse(data)
-    : data;
-}
+  //   const defaultFolder
+  //     = `${ this.workspaceRoot }/node_modules/@schematics/angular`;
 
-export async function readFiles(o) {
-  const files = await globp(o) as string[];
-  if (!files.length) { return files; }
+  //   return readFiles(collectionFolder, `**/${ name }/schema.json`)
+  //     .then(data => data.length
+  //       ? data
+  //       : readFiles(defaultFolder, `**/${ name }/schema.json`))
+  //     .then(data => data
+  //       ? data[ 0 ][ 'schema.json' ]
+  //       : data);
+  // }
 
-  return Promise.all(files.map(o => readFile(o).then(data => {
-    return { [ path.basename(o) ]: data };
-  })))
-}
+  // private async processSchematics(meta) {
+  //   const baseCollections
+  //     = Object.entries(meta.schematics)
+  //       .filter(([ name, config ]) => config.extends)
+  //       .map(([ name, config ]) =>
+  //         [ name, config.extends.split(':')[ 0 ] ])
+  //       .map(([ name, schematics ]) => [ name, schematics
+  //         ? this.getCollection(schematics)
+  //         : null ])
+  //       .map(([ name, promise ]) =>
+  //         promise.then(data => ({ name, data })))
 
-export async function writeFile(filepath, data, backup = false): Promise<any> {
-  const folder = await mkdirp(path.dirname(filepath));
-  if (folder !== true) { return folder; }
+  //   const baseCollectionsMap
+  //     = (await Promise.all(baseCollections))
+  //       .reduce((dict, { name, data }) =>
+  //         ({ ...dict, [ name ]: data }), {})
 
-  data = typeof data === 'object'
-    ? JSON.stringify(data, null, 2)
-    : data;
+  //   const unwrapExtends
+  //     = Object.entries(meta.schematics)
+  //       .reduce((dict, [ name, config ]) =>
+  //         ({ ...dict, [ name ]: this.unwrapExtends(config, baseCollectionsMap[ name ]) }), {});
 
-  return new Promise(res =>
-    fs.writeFile(resolve(filepath), data, (error) => res(error || true)));
-}
+  //   const unwrapSchema
+  //     = Object.entries(unwrapExtends)
+  //       .map(([ name, config ]) =>
+  //         [ name, this.unwrapSchema(meta.collection, name) ])
+  //       .map(([ name, promise ]: any) =>
+  //         promise.then(data => ({ name, data })))
 
-export async function updateJson<T>(filepath, transform: (o: T) => T, backup = false) {
-  const data = await readFile(filepath);
-  return writeFile(filepath, transform(data), backup);
-}
+  //   const schematics
+  //     = (await Promise.all(unwrapSchema))
+  //       .reduce((dict, { name, data }) =>
+  //         ({ ...dict, [ name ]: data }), {})
 
-export function createRunnerScript(rootDir) {
-  const script = `script=$1\nshift\nsh ${ rootDir }/commands/$script.sh $@`;
-  return writeFile(`${ rootDir }/.run.sh`, script);
-}
-
-export function hasRunnerScript(rootDir) {
-  return existsp(`${ rootDir }/.run.sh`);  
-}
-
-export function saveCommandScript() {
-}
-
-export async function test() {
-  console.log('testing file system', path.resolve('.'));
-  // console.log('testing file system', path.resolve('node_modules/.ng-gui'));
-  // console.log('testing file system', resolve('node_modules/.ng-gui'));
-  // console.log(await fofDelete('.ng-gui'));
-  // console.log(typeof await copyFile('.ng-gui/commands/test.sh', '.ng-gui'));
-  // const data = [ 12, 3, 'abc', null ];
-  // console.log(await readFiles('src/test/*'));
-
-  // fs.exists(resolve('.ng-gui'), (exists) => {
-  //   console.log(exists);
-  //   if (exists) { return; }
-  //   fs.mkdir(resolve('.ng-gui'), (error) => {
-  //     console.log(error);
-  //   })
-
-  // })
+  //   return { ...meta, schematics };
+  // }
+  //#endregion
 }

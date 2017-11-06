@@ -1,4 +1,4 @@
-import { sort, type } from './utils';
+import { sort, type } from '../core/utils';
 
 export const doc = {
   name: 'doc',

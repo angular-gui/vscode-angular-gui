@@ -14,6 +14,9 @@ module.exports = {
   },
   target: 'node',
   externals: [ nodeExternals() ],
+  node: {
+    __dirname: false,
+  },
   // Enable sourcemaps for debugging webpack's output.
   devtool: "source-map",
 

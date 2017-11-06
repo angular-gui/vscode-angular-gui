@@ -1,4 +1,4 @@
-import { sort, type } from './utils';
+import { sort, type } from '../core/utils';
 
 export const test = {
   name: 'test',
@@ -22,7 +22,7 @@ export const test = {
     },
     {
       name: 'config',
-      type: String,
+      type: 'Path',
       aliases: [ 'c' ],
       description: `Use a specific config file. Defaults to the karma config file in .angular-cli.json.`
     },
@@ -81,10 +81,6 @@ export const test = {
       type: String,
       aliases: [ 'e' ],
       description: 'Defines the build environment.',
-      values: [
-        'development',
-        'production',
-      ],
     },
     {
       name: 'preserve-symlinks',

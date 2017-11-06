@@ -1,4 +1,4 @@
-import { sort, type } from './utils';
+import { sort, type } from '../core/utils';
 
 export const build = {
   name: 'build',
@@ -18,10 +18,6 @@ export const build = {
       type: String,
       default: 'development',
       aliases: [ 't', { 'dev': 'development' }, { 'prod': 'production' }],
-      values: [
-        'development',
-        'production',
-      ],
       description: 'Defines the build target.',
     },
     {
@@ -29,14 +25,10 @@ export const build = {
       type: String,
       aliases: [ 'e' ],
       description: 'Defines the build environment.',
-      values: [
-        'development',
-        'production',
-      ],
     },
     {
       name: 'output-path',
-      type: 'Path',
+      type: String,
       aliases: [ 'op' ],
       description: 'Path where output will be placed.'
     },
@@ -102,6 +94,8 @@ export const build = {
     {
       name: 'i18n-format',
       type: String,
+      default: 'xlf',
+      values: [ 'xmb', 'xlf' ],
       description: 'Format of the localization file specified with --i18n-file.'
     },
     {

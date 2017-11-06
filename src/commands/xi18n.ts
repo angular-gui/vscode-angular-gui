@@ -1,4 +1,4 @@
-import { sort, type } from './utils';
+import { sort, type } from '../core/utils';
 
 export const xi18n = {
   name: 'xi18n',
@@ -11,11 +11,12 @@ export const xi18n = {
       type: String,
       default: 'xlf',
       aliases: [ 'f', { 'xmb': 'xmb' }, { 'xlf': 'xlf' }, { 'xliff': 'xlf' }],
+      values: [ 'xmb', 'xlf' ],
       description: 'Output format for the generated file.'
     },
     {
       name: 'output-path',
-      type: 'Path',
+      type: String,
       default: null,
       aliases: [ 'op' ],
       description: 'Path where output will be placed.'

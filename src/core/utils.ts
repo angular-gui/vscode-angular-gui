@@ -19,7 +19,7 @@ export function type(o) {
     ...o,
     type:
       typeof o.type === 'function'
-        ? o.type.name
-        : o.type
+        ? o.type.name.toLowerCase()
+        : o.type.toLowerCase()
   };
 }

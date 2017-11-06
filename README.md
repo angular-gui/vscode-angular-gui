@@ -1,6 +1,6 @@
 # angular-gui README
 
-This is the README for your extension "angular-gui". After writing up a brief description, we recommend including the following sections.
+Run Angular CLI from your browser.
 
 ## Features
 
@@ -14,7 +14,14 @@ For example if there is an image subfolder under your extension project workspac
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Dependencies:
+
+    "@angular-devkit/schematics": "0.0.35",
+    "express": "^4.16.2",
+    "rxjs": "^5.5.2",
+    "shelljs": "^0.7.8",
+    "socket.io": "^2.0.4",
+    "stoppable": "^1.0.4"
 
 ## Extension Settings
 
@@ -35,31 +42,7 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 Users appreciate release notes as you update your extension.
 
-### 1.0.0
+### 0.0.3
 
-Initial release of ...
+Alpha release
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on OSX or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on OSX or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (OSX) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**

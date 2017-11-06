@@ -1,4 +1,5 @@
-import { sort, type } from './utils';
+import { sort, type } from '../core/utils';
+
 import { build } from './build';
 
 export const serve = {
@@ -36,13 +37,13 @@ export const serve = {
     },
     {
       name: 'ssl-key',
-      type: String,
+      type: 'Path',
       // default: serveConfigDefaults[ 'sslKey' ],
       description: 'SSL key to use for serving HTTPS.'
     },
     {
       name: 'ssl-cert',
-      type: String,
+      type: 'Path',
       // default: serveConfigDefaults[ 'sslCert' ],
       description: 'SSL certificate to use for serving HTTPS.'
     },

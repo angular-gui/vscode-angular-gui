@@ -1,21 +1,32 @@
-export const rootDir = '.ng-gui';
-
-export const config = {
-  environment: [
-    'production',
-    'development'
-  ],
-  port: 4300,
-  rootDir,
-  target: [
-    'production',
-    'development'
-  ]
-};
-
 export interface Command {
-  label: string;
-  value: string;
+  $exec?: number;
+  description: string;
+  name: string;
+  options?: Array<{ name: string; value: any; }>;
+  script: string;
   type: string;
-  options: { [ key: string ]: string };
+  value: string;
 }
+
+export const defaultConfiguration = {
+  port: 4300,
+  rootDir: '.ng-gui',
+  options: {
+    environment: [
+      'development',
+      'production',
+    ],
+    target: [
+      'development',
+      'production',
+    ],
+    collection: [
+      '@schematics/angular',
+    ],
+    styleext: [
+      'styl',
+      'scss',
+      'css',
+    ]
+  }
+};

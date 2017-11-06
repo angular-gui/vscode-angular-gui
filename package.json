@@ -2,8 +2,8 @@
   "name": "ng-gui",
   "displayName": "Angular GUI Extension",
   "description": "Run Angular CLI from your browser",
-  "version": "0.0.2",
-  "publisher": "sasxa.net",
+  "version": "0.1.0",
+  "publisher": "jcpbw5luns5x4qi2rotn2ybrx7miutq3gcalxfeqvbom3xa6psaq",
   "engines": {
     "vscode": "^1.17.0"
   },
@@ -26,6 +26,10 @@
         "title": "Angular GUI: Start in Online mode"
       },
       {
+        "command": "extension.rebuildConfiguration",
+        "title": "Angular GUI: Rebuild schematics"
+      },
+      {
         "command": "extension.disconnect",
         "title": "Angular GUI: Stop"
       }
@@ -33,7 +37,7 @@
   },
   "scripts": {
     "build": "sh build.sh",
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "webpack",
     "compile": "tsc -p ./",
     "debug": "webpack",
     "watch": "webpack --watch",
@@ -56,8 +60,9 @@
     "webpack-node-externals": "^1.6.0"
   },
   "dependencies": {
+    "@angular-devkit/schematics": "0.0.35",
     "express": "^4.16.2",
-    "ps-node": "^0.1.6",
+    "rxjs": "^5.5.2",
     "shelljs": "^0.7.8",
     "socket.io": "^2.0.4",
     "stoppable": "^1.0.4"
