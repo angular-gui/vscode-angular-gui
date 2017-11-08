@@ -4,7 +4,11 @@
   "description": "Run Angular CLI from your browser",
   "version": "0.1.2",
   "publisher": "sasxa-net",
-  "icon": "images/angular-gui.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sasxa/vscode-angular-gui.git"
+  },
+  "icon": "angular-gui.png",
   "galleryBanner": {
     "color": "#FFC107",
     "theme": "light"

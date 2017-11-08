@@ -12,6 +12,20 @@ Run Angular CLI from your browser!
 * Access to command options that are locked in CLI
 * Custom defaults for command options
 
+![Alpha release](https://raw.githubusercontent.com/sasxa/vscode-angular-gui/master/src/images/angular-gui-alpha-0.1.2.gif)
+
+## Installation and Usage
+
+1. To install extension, [download VSIX file](https://raw.githubusercontent.com/sasxa/vscode-angular-gui/master/angular-gui-0.1.2.vsix) and install it with VSCode command `Extensions: Install from VSIX...` from **Command Palette**, [more info](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix). 
+
+2. Extension will be activated for Angular CLI projects (if there is a `.angular-cli.json` in project root).
+
+3. Start local server (listening on localhost:4300) by clicking on shild icon in VSCode status bar, or with VSCode command `GUI for Angular: Start in Online mode` from **Command Palette**.
+
+4. Open https://angular-gui.firebaseapp.com
+
+5. Enjoy!
+
 ## Extension Settings
 
 > Extension Settings for `angular-gui` will be available in next release.
@@ -41,7 +55,8 @@ will replace `prefix` option input from **text input** to **select box** for all
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+* Possible memory leak with `ng generate`.
+* Commands should work for *happy-path*, there are no error messages or notifications. 
 
 ## TO-DO:
 
@@ -52,4 +67,4 @@ Calling out known issues can help limit users opening duplicate issues against y
 
 ## Release notes
 
-You can checkout release notes and changes in [change log](#).
+You can checkout release notes and changes in [change log](https://github.com/sasxa/vscode-angular-gui/blob/master/CHANGELOG.md).
