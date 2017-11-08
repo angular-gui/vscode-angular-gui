@@ -7,51 +7,64 @@ import { processAction, processCommand } from './runner';
 
 import { Command } from './models';
 import { FilesManager } from './files';
-import { OutputChannel } from 'vscode';
 import { SchematicsManager } from './schematics';
 import { Server } from 'http';
 import { sort } from './utils';
+import { terminal } from '@angular-devkit/core';
 
 export class AngularGUI {
-  app; cli; fm: FilesManager; server; sm: SchematicsManager; socket;
+  private app;
+  cliConfig;
+  cliCollection;
+  files: FilesManager;
+  server;
+  schematics: SchematicsManager;
+  socket;
+  terminal = terminal;
 
   constructor(public config, public logger) {
     this.app = express().get('/', (req, res) => res.sendStatus(202));
-    this.fm = new FilesManager(config);
-    this.sm = new SchematicsManager(config);
+    this.files = new FilesManager(config);
+    this.schematics = new SchematicsManager(config);
   }
 
-  start(cb) {
+  start(statusUpdate) {
     this.server = stoppable(this.app.listen(this.config.port, () => {
-      this.logger(`Listening on localhost:${ this.config.port }`);
+      const host = terminal.magenta(`localhost:${ this.config.port }`);
+      this.logger(`Listening on ${ host }...`);
     }), 0);
 
-    this.server.once('listening', () => cb(null));
+    this.server.once('listening', () => statusUpdate('listening'));
 
     this.socket = io(this.server).on('connection', async socket => {
+      const cliConfig = this.cliConfig
+        = await this.files.cliConfig;
+
+      const cliCollection = this.cliCollection
+        = this.cliConfig.defaults.schematics
+          ? this.cliConfig.defaults.schematics.collection
+          : '@schematics/angular';
 
       const clientConfig
-        = !this.config.extensionRoot.includes('extensions')
-          ? await this.fm.deleteClientConfig()
+        = !this.config.local
+          ? await this.files.deleteClientConfig()
             .then(() => this.rebuild())
-            .then(() => this.fm.clientConfig)
+            .then(() => this.files.clientConfig)
 
           // DEV ONLY: rebuild clientConfig when running from local.ts
-          : await this.fm.clientConfig
+          : await this.files.clientConfig
           || await this.rebuild()
-            .then(() => this.fm.clientConfig)
+            .then(() => this.files.clientConfig)
 
       const guiCommands
-        = await this.fm.guiCommands;
+        = await this.files.guiCommands;
 
       const guiConfig = {
         ...this.config,
-        runner: await this.fm.hasRunnerScript,
+        runner: await this.files.hasRunnerScript,
       };
 
-      this.cli = clientConfig.cliCollection;
-
-      socket.emit('init', { ...clientConfig, guiCommands, guiConfig });
+      socket.emit('init', { ...clientConfig, cliConfig, guiCommands, guiConfig });
 
       socket.on('action', (command: Command) =>
         processAction(command, socket, this));
@@ -60,23 +73,24 @@ export class AngularGUI {
         processCommand(command, socket, this));
 
       socket.on('disconnect', socket => {
-        this.logger(`Client disconnected`);
+        this.logger(terminal.red(`Client disconnected.`));
       });
     });
 
     this.socket.on('connection', socket => {
-      this.logger(`Client connected from ${ socket.handshake.headers.origin }`);
-      cb(true);
+      const origin = terminal.magenta(socket.handshake.headers.origin);
+      this.logger(`Client connected from ${ origin }.`);
+      statusUpdate('connected');
     });
 
     this.socket.on('disconnect', socket => {
-      this.logger(`Server terminated`);
-      cb(null);
+      this.logger(terminal.yellow(`Server terminated`));
+      statusUpdate('listening');
     });
   }
 
-  stop(cb) {
-    this.server.once('close', () => cb(false));
+  stop(statusUpdate) {
+    this.server.once('close', () => statusUpdate('disconnected'));
     this.server.stop();
   }
 
@@ -87,36 +101,28 @@ export class AngularGUI {
    * or manually via extension command `extension.rebuildConfiguration`
    */
   async rebuild() {
-    const cliConfig = await this.fm.cliConfig;
-
-    const cliCollection
-      = cliConfig.defaults.schematics
-        ? cliConfig.defaults.schematics.collection
-        : '@schematics/angular';
 
     this.config.options.collection
-      = [ cliCollection, '@schematics/angular' ]
+      = [ this.cliCollection, '@schematics/angular' ]
         .filter((v, i, a) => a.indexOf(v) === i);
 
-    await this.sm.copySchematics(this.config.options.collection);
+    await this.files.copyCliSchematics(this.config.options.collection);
 
     this.config.options.blueprint
-      = this.sm.availableBlueprints(cliCollection)
+      = this.schematics.availableBlueprints(this.cliCollection)
 
     const cliSchematics
       = this.config.options.blueprint
         .map(blueprint =>
-          this.sm.blueprintCommand(cliCollection, blueprint))
+          this.schematics.blueprintCommand(this.cliCollection, blueprint))
         .map(command => this.updateCommandOptions(command));
 
     const cliCommands
       = Object.values(commands)
         .map(command => this.updateCommandOptions(command));
 
-    return this.fm.saveClientConfig({
-      cliCollection,
+    return this.files.saveClientConfig({
       cliCommands,
-      cliConfig,
       cliSchematics,
     });
   }

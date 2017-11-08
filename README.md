@@ -1,48 +1,55 @@
-# angular-gui README
+# GUI for Angular extension for Visual Studio Code
 
-Run Angular CLI from your browser.
+Run Angular CLI from your browser!
+
+`angular-gui` extension connects your Angular CLI project with https://angular-gui.firebaseapp.com allowing you to excute CLI commands from browser.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-Dependencies:
-
-    "@angular-devkit/schematics": "0.0.35",
-    "express": "^4.16.2",
-    "rxjs": "^5.5.2",
-    "shelljs": "^0.7.8",
-    "socket.io": "^2.0.4",
-    "stoppable": "^1.0.4"
+* Overview of all available command options
+* Save and reuse commands
+* Support for multiple schematics
+* Access to command options that are locked in CLI
+* Custom defaults for command options
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
+> Extension Settings for `angular-gui` will be available in next release.
 
 This extension contributes the following settings:
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `angular-gui.port`: port for Socket connection
+* `angular-gui.rootDir`: folder for extension files
+* `angular-gui.options`: options for selected CLI settings
+  * `environment`: list of available environments
+  * `target`: list of available targets
+  * `collection`: list of available schematic collections
+  * `styleext`: list of available style extensions
+
+Default value will be set to the first item from the list.
+
+You can add any other CLI command option to `angular-gui.options`, for example:
+
+    "angular-gui.options.prefix": [
+        "app", 
+        "abc"
+    ]
+
+will replace `prefix` option input from **text input** to **select box** for all commands that have prefix option. 
+
+---
 
 ## Known Issues
 
 Calling out known issues can help limit users opening duplicate issues against your extension.
 
-## Release Notes
+## TO-DO:
 
-Users appreciate release notes as you update your extension.
+* Smarter defaults for schematics options
+* Better Feedback and Error Handling for executed commands
+* Support for custom shell commands
+* Tests!
 
-### 0.0.3
+## Release notes
 
-Alpha release
-
+You can checkout release notes and changes in [change log](#).

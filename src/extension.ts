@@ -12,17 +12,13 @@ import { AngularGUI, defaultConfiguration as config } from './core';
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "angular-gui" is now active!');
-  
   // TODO: use vscode configuration
   try {
     const rootUri = vscode.workspace.workspaceFolders[ 0 ];
     config[ 'workspaceRoot' ] = rootUri.uri.fsPath;
     config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
   } catch  {
-    config[ 'workspaceRoot' ] = config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
+    // config[ 'workspaceRoot' ] = config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
   }
 
   const output = vscode.window.createOutputChannel('Angular GUI');
@@ -34,32 +30,32 @@ export function activate(context: vscode.ExtensionContext) {
 
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
   status.text = '$(shield)';
-  toggleStatus(false);
-  status.show();
 
-  function toggleStatus(connected: boolean) {
-    if (connected === true) {
+  function toggleStatus(value: 'listening' | 'connected' | 'disconnected') {
+    if (value === 'connected') {
       status.command = 'extension.disconnect';
       status.tooltip = 'Angular GUI connected (click to disconnect)'
       status.color = '#2dcae2';
-    } else if (connected === null) {
+    } else if (value === 'listening') {
       status.command = 'extension.disconnect';
       status.tooltip = 'Waiting for connection (click to disconnect)';
       status.color = '#edb834';
-    } else {
+    } else if (value === 'disconnected') {
       status.command = 'extension.connectOnline';
       status.tooltip = 'Start Angular GUI';
       status.color = null;
     }
   }
 
+  toggleStatus('disconnected');
+  status.show();
+
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with  registerCommand
   // The commandId parameter must match the command field in package.json
   const offline = vscode.commands
-    .registerCommand('extension.connectOffline', () => {
-      vscode.window.showWarningMessage('This feature is not available.');
-    });
+    .registerCommand('extension.connectOffline', () =>
+      vscode.window.showWarningMessage('This feature is not available.'));
 
   // const { server, socket } = start({ port: 4321 }, output);
   const online = vscode.commands
@@ -71,12 +67,11 @@ export function activate(context: vscode.ExtensionContext) {
       gui.stop(toggleStatus));
 
   const rebuild = vscode.commands
-    .registerCommand('extension.rebuildConfiguration', () => {
+    .registerCommand('extension.rebuildConfiguration', () =>
       vscode.window.showInformationMessage('Rebuilding Schematics and updating Client Configuration.')
         .then(() => gui.rebuild())
         .then(() => vscode.window.showInformationMessage('Rebuilding complete.'))
-        .then(() => gui.socket.emit('reload'));
-    });
+        .then(() => gui.socket.emit('reload')));
 
   context.subscriptions.push(offline, online, rebuild, status);
 }

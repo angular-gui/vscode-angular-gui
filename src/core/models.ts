@@ -24,8 +24,8 @@ export const defaultConfiguration = {
       '@schematics/angular',
     ],
     styleext: [
-      'styl',
       'scss',
+      'styl',
       'css',
     ]
   }

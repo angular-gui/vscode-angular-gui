@@ -1,7 +1,12 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## Version 0.1.2
 
-## [Unreleased]
-- Initial release
+Alpha release
+
+## Version 0.0.1
+
+* Proof of concept
+
+![Proof of concept](images/angular-gui-alpha-0.0.1.gif)

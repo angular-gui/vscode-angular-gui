@@ -8,3 +8,5 @@ tsconfig.json
 vsc-extension-quickstart.md
 webpack**
 **/*.sh
+.angular-gui.json
+.ng-gui

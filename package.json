@@ -1,48 +1,57 @@
 {
-  "name": "ng-gui",
-  "displayName": "Angular GUI Extension",
+  "name": "angular-gui",
+  "displayName": "GUI for Angular Extension",
   "description": "Run Angular CLI from your browser",
-  "version": "0.1.0",
-  "publisher": "jcpbw5luns5x4qi2rotn2ybrx7miutq3gcalxfeqvbom3xa6psaq",
+  "version": "0.1.2",
+  "publisher": "sasxa-net",
+  "icon": "images/angular-gui.png",
+  "galleryBanner": {
+    "color": "#FFC107",
+    "theme": "light"
+  },
   "engines": {
     "vscode": "^1.17.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "Angular",
+    "Angular CLI"
+  ],
   "activationEvents": [
-    "workspaceContains:**/.angular-cli.json",
-    "*"
+    "workspaceContains:**/.angular-cli.json"
   ],
   "main": "./out/extension",
   "contributes": {
     "commands": [
       {
         "command": "extension.connectOffline",
-        "title": "Angular GUI: Start in Offline mode"
+        "title": "GUI for Angular: Start in Offline mode"
       },
       {
         "command": "extension.connectOnline",
-        "title": "Angular GUI: Start in Online mode"
+        "title": "GUI for Angular: Start in Online mode"
       },
       {
         "command": "extension.rebuildConfiguration",
-        "title": "Angular GUI: Rebuild schematics"
+        "title": "GUI for Angular: Rebuild schematics"
       },
       {
         "command": "extension.disconnect",
-        "title": "Angular GUI: Stop"
+        "title": "GUI for Angular: Stop"
       }
     ]
   },
   "scripts": {
     "build": "sh build.sh",
-    "vscode:prepublish": "webpack",
     "compile": "tsc -p ./",
     "debug": "webpack",
-    "watch": "webpack --watch",
+    "package": "vsce package",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    "test": "npm run compile && node ./node_modules/vscode/bin/test",
+    "vscode:prepublish": "webpack",
+    "watch": "webpack --watch"
   },
   "devDependencies": {
     "@types/express": "^4.0.39",
@@ -62,9 +71,11 @@
   "dependencies": {
     "@angular-devkit/schematics": "0.0.35",
     "express": "^4.16.2",
+    "ps-tree": "^1.1.0",
     "rxjs": "^5.5.2",
     "shelljs": "^0.7.8",
     "socket.io": "^2.0.4",
+    "typescript": "^2.5.3",
     "stoppable": "^1.0.4"
   }
 }

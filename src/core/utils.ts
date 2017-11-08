@@ -23,3 +23,10 @@ export function type(o) {
         : o.type.toLowerCase()
   };
 }
+
+export function omitBy<T>(source: T, filter: (o: T, ...rest) => boolean): T {
+  return Object.entries(source)
+    .filter(([ key, value ]) => !filter(value, key))
+    .reduce((dict, [ key, value ]) =>
+      ({ ...dict, [ key ]: value }), {} as any);
+}
