@@ -162,16 +162,6 @@ export class SchematicsManager {
       = options.collection
       || app.cliCollection;
 
-    this.host.registerOptionsTransform((schematic: any, options: {}) => {
-      const transformed = {
-        ...this.commandDefaults(schematic, command.options, cliApp),
-        ...this.commandValues(schematic, command.options),
-      };
-
-      console.log(`registerOptionsTransform`, transformed);
-      return transformed;
-    });
-
     const engine: SchematicEngine<any, any> = this.engine;
     const _collection = engine.createCollection(collection);
     const schematic = _collection.createSchematic(blueprint);
@@ -184,6 +174,26 @@ export class SchematicsManager {
       = new FileSystemHost(join(this.config.workspaceRoot, cliApp.root));
     const tree$
       = of(new FileSystemTree(fsHost))
+
+    /** 
+     * this.host.registerOptionsTransform() is an observable with no teardown ???
+     * My workaround is not to use it and process options synchronously...
+     */
+
+    // this.host.registerOptionsTransform((schematic: any, options: {}) => {
+    //   const transformed = {
+    //     ...this.commandDefaults(schematic, command.options, cliApp),
+    //     ...this.commandValues(schematic, command.options),
+    //   };
+
+    //   console.log(`registerOptionsTransform`, tree$);
+    //   return transformed;
+    // });
+
+    const transformedOptions = {
+      ...this.commandDefaults(schematic.description, command.options, cliApp),
+      ...this.commandValues(schematic.description, command.options),
+    };
 
     const loggingQueue: string[] = [];
 
@@ -211,7 +221,7 @@ export class SchematicsManager {
       }
     });
 
-    schematic.call({}, tree$)
+    schematic.call(transformedOptions, tree$)
       .map((tree: Tree) => Tree.optimize(tree))
       .concatMap((tree: Tree) => {
         return dryRunSink
@@ -237,6 +247,6 @@ export class SchematicsManager {
           socket.emit('finish', command);
           loggingQueue.forEach(log => app.logger(log));
         }
-      })
+      });
   }
 }
