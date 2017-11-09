@@ -59,9 +59,6 @@ export class FilesManager {
 
   saveClientConfig(data) {
     const filename = join(this.clientConfigFolder, '.angular-gui.json');
-    console.log(filename);
-    
-
     return helpers.writeFile(filename, data);
   }
 

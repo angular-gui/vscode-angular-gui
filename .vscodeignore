@@ -11,4 +11,3 @@ webpack**
 **/*.sh
 .angular-gui.json
 .angular-gui
-.ng-gui

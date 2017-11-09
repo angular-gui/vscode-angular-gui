@@ -139,19 +139,18 @@ export class AngularGUI {
    * and default value will be "development"
    */
   private updateCommandOptions(command) {
-    const hasConfig = name =>
-      Object.keys(this.config.options).includes(name);
-
     const availableOptions
       = command.availableOptions
-        .map(option => !hasConfig(option.name)
-          ? option
-          : ({
-            ...option,
-            values: this.config.options[ option.name ],
-            default: this.config.options[ option.name ][ 0 ],
-          }))
+        .map(option =>
+          !(option.name in this.config.options)
+            ? option
+            : ({
+              ...option,
+              values: this.config.options[ option.name ],
+              default: this.config.options[ option.name ][ 0 ],
+            }))
 
     return { ...command, availableOptions };
   }
 }
+// 
