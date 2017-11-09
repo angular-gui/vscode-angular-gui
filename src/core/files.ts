@@ -1,13 +1,13 @@
 import * as helpers from './helpers';
 
-import { join } from 'path';
+import { basename, join } from 'path';
 
 /**
  * Exposes file system commands for specific files
  */
 export class FilesManager {
+  clientConfigFolder;
   commandsFolder;
-  extensionFolder;
   extensionRoot;
   schematicsFolder;
   workspaceFolder;
@@ -19,7 +19,7 @@ export class FilesManager {
     this.commandsFolder = join(this.workspaceFolder, 'commands');
     this.schematicsFolder = join(this.workspaceFolder, 'schematics');
     this.extensionRoot = config.extensionRoot;
-    this.extensionFolder = join(config.extensionRoot, config.rootDir);
+    this.clientConfigFolder = join(config.extensionRoot, basename(this.workspaceRoot));
   }
 
   /**
@@ -58,12 +58,15 @@ export class FilesManager {
   }
 
   saveClientConfig(data) {
-    const filename = join(this.extensionFolder, '.angular-gui.json');
+    const filename = join(this.clientConfigFolder, '.angular-gui.json');
+    console.log(filename);
+    
+
     return helpers.writeFile(filename, data);
   }
 
   deleteClientConfig() {
-    const filename = join(this.extensionFolder, '.angular-gui.json');
+    const filename = join(this.clientConfigFolder, '.angular-gui.json');
     return helpers.unlinkp(filename);
   }
 
@@ -88,7 +91,7 @@ export class FilesManager {
   }
 
   get clientConfig() {
-    const filename = join(this.extensionFolder, '.angular-gui.json');
+    const filename = join(this.clientConfigFolder, '.angular-gui.json');
     return helpers.readFile(filename);
   }
 
