@@ -4,3 +4,4 @@ node_modules
 .vsix
 .angular-gui.json
 .angular-gui
+*.vsix

@@ -67,7 +67,6 @@
     "concurrently": "^3.5.0",
     "nodemon": "^1.12.1",
     "source-map-loader": "^0.2.3",
-    "typescript": "^2.6.1",
     "vscode": "^1.1.6",
     "webpack": "^3.8.1",
     "webpack-node-externals": "^1.6.0"
