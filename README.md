@@ -12,11 +12,11 @@ Run Angular CLI from your browser!
 * Access to command options that are locked in CLI
 * Custom defaults for command options
 
-![Alpha release](https://raw.githubusercontent.com/sasxa/vscode-angular-gui/master/src/images/angular-gui-alpha-0.1.2.gif)
+![Alpha release](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/angular-gui-alpha-0.1.2.gif)
 
 ## Installation and Usage
 
-1. To install extension, [download VSIX file](https://raw.githubusercontent.com/sasxa/vscode-angular-gui/master/angular-gui-0.1.2.vsix) and install it with VSCode command `Extensions: Install from VSIX...` from **Command Palette**, [more info](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix). 
+1. To install extension, [download VSIX file](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/bin/angular-gui-0.1.3.vsix) and install it with VSCode command `Extensions: Install from VSIX...` from **Command Palette**, [more info](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix). 
 
 2. Extension will be activated for Angular CLI projects (if there is a `.angular-cli.json` in project root).
 
@@ -34,7 +34,7 @@ This extension contributes the following settings:
 
 * `angular-gui.port`: port for Socket connection
 * `angular-gui.rootDir`: folder for extension files
-* `angular-gui.options`: options for selected CLI settings
+* `angular-gui.options`: CLI command options' values and defaults
   * `environment`: list of available environments
   * `target`: list of available targets
   * `collection`: list of available schematic collections
@@ -65,6 +65,7 @@ will replace `prefix` option input from **text input** to **select box** for all
 * Support for custom shell commands
 * Tests!
 
-## Release notes
+## Release notes and Change log
 
-You can checkout release notes and changes in [change log](https://github.com/sasxa/vscode-angular-gui/blob/master/CHANGELOG.md).
+* [GUI for Angular VSCode Extension](https://github.com/angular-gui/vscode-angular-gui/blob/master/CHANGELOG.md)
+* [GUI for Angular Client](https://github.com/angular-gui/client-angular-gui/blob/master/CHANGELOG.md)

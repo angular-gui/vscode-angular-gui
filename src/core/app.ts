@@ -10,7 +10,6 @@ import { FilesManager } from './files';
 import { SchematicsManager } from './schematics';
 import { Server } from 'http';
 import { sort } from './utils';
-import { terminal } from '@angular-devkit/core';
 
 export class AngularGUI {
   private app;
@@ -20,7 +19,6 @@ export class AngularGUI {
   server;
   schematics: SchematicsManager;
   socket;
-  terminal = terminal;
 
   constructor(public config, public logger) {
     this.app = express().get('/', (req, res) => res.sendStatus(202));
@@ -30,8 +28,7 @@ export class AngularGUI {
 
   start(statusUpdate) {
     this.server = stoppable(this.app.listen(this.config.port, () => {
-      const host = terminal.magenta(`localhost:${ this.config.port }`);
-      this.logger(`Listening on ${ host }...`);
+      this.logger(`Listening on localhost:${ this.config.port }...`);
     }), 0);
 
     this.server.once('listening', () => statusUpdate('listening'));
@@ -46,12 +43,12 @@ export class AngularGUI {
           : '@schematics/angular';
 
       const clientConfig
-        = !this.config.local
+        = this.config.local
+          // DEV ONLY: rebuild clientConfig when not running from extension
           ? await this.files.deleteClientConfig()
             .then(() => this.rebuild())
             .then(() => this.files.clientConfig)
 
-          // DEV ONLY: rebuild clientConfig when running from local.ts
           : await this.files.clientConfig
           || await this.rebuild()
             .then(() => this.files.clientConfig)
@@ -73,18 +70,17 @@ export class AngularGUI {
         processCommand(command, socket, this));
 
       socket.on('disconnect', socket => {
-        this.logger(terminal.red(`Client disconnected.`));
+        this.logger(`Client disconnected.`);
       });
     });
 
     this.socket.on('connection', socket => {
-      const origin = terminal.magenta(socket.handshake.headers.origin);
-      this.logger(`Client connected from ${ origin }.`);
+      this.logger(`Client connected from ${ socket.handshake.headers.origin }.`);
       statusUpdate('connected');
     });
 
     this.socket.on('disconnect', socket => {
-      this.logger(terminal.yellow(`Server terminated`));
+      this.logger(`Server terminated`);
       statusUpdate('listening');
     });
   }

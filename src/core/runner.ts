@@ -22,7 +22,8 @@ export function processCommand(command: Command, socket: SocketIO.Socket, app: G
       return execCommand(command, socket, app);
 
     case 'generate':
-      return app.schematics.generateBlueprint(command, socket, app);
+      return app.schematics
+        .generateBlueprint(command, socket, app);
 
     // case 'init':
     //   return initCommand(command, socket, app);
@@ -34,7 +35,10 @@ export function processCommand(command: Command, socket: SocketIO.Socket, app: G
       return saveScript(command, socket, app);
 
     default:
-      return socket.emit('failure', command);
+      return socket.emit('failure', {
+        command,
+        message: 'Invalud command'
+      });
   }
 }
 
@@ -42,15 +46,16 @@ export async function deleteScript(command: Command, socket: SocketIO.Socket, ap
   const name
     = dasherize(command.name)
       .replace(/-/g, '.');
-
   const message
-    = app.terminal.yellow('Deleting script ')
-    + app.terminal.bold(command.name + '.sh')
+    = `Deleting script: ${ name }.sh`;
   app.logger(message);
 
   return await app.files.deleteCommand(name)
     ? socket.emit('success', command)
-    : socket.emit('failure', command);
+    : socket.emit('failure', {
+      command,
+      message: 'Delete failed'
+    });
 }
 
 export function execCommand(command: Command, socket: SocketIO.Socket, app: GUI) {
@@ -58,10 +63,8 @@ export function execCommand(command: Command, socket: SocketIO.Socket, app: GUI)
     = command.description
       ? command.description
       : command.name
-        ? app.terminal.blue('Executing command ')
-        + app.terminal.bold(command.name + '.sh')
-        : app.terminal.blue('Executing command ')
-        + app.terminal.bold(`${ command.value }`)
+        ? `Executing command: ${ command.name }.sh`
+        : `Executing command: ${ command.value }`;
   app.logger(message);
 
   const script = command.script.replace(/^# (.*) \n/gm, '');
@@ -82,10 +85,8 @@ export function execCommand(command: Command, socket: SocketIO.Socket, app: GUI)
 
 export function killCommand(command: Command, socket: SocketIO.Socket, app: GUI) {
   const message = command.name
-    ? app.terminal.yellow('Terminating command ')
-    + app.terminal.bold(command.name + '.sh')
-    : app.terminal.yellow('Terminating command ')
-    + app.terminal.bold(`${ command.value }`)
+    ? `Terminating command: ${ command.name }.sh`
+    : `Terminating command: ${ command.value }`;
   app.logger(message);
 
   pstree(command.$exec, (error, children) => {
@@ -101,13 +102,14 @@ export async function saveScript(command: Command, socket: SocketIO.Socket, app:
   const name
     = dasherize(command.name)
       .replace(/-/g, '.');
-
   const message
-    = app.terminal.green('Saving command ')
-    + app.terminal.bold(name + '.sh')
+    = `Saving script: ${ name }.sh`;
   app.logger(message);
 
   return await app.files.saveCommand(name, command.script)
     ? socket.emit('success', command)
-    : socket.emit('failure', command);
+    : socket.emit('failure', {
+      command,
+      message: 'Save failed'
+    });
 }

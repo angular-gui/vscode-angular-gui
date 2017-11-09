@@ -68,7 +68,7 @@ export class SchematicsManager {
 
   private blueprintDefaults(schematic: FileSystemSchematicDesc) {
     return Object.entries(schematic.schemaJson.properties)
-      .filter(([ name, option ]) => option.hasOwnProperty('default'))
+      .filter(([ name, option ]) => 'default' in option)
       .reduce((dict, [ name, option ]) => ({
         ...dict,
         [ name ]: option.default
@@ -76,8 +76,8 @@ export class SchematicsManager {
   }
 
   private commandDefaults(schematic: FileSystemSchematicDesc, guiOptions = [], cliApp) {
-    const blueprintProperties
-      = Object.keys(schematic.schemaJson.properties);
+    const blueprintProperties: any
+      = schematic.schemaJson.properties;
 
     const defaults: any = this.blueprintDefaults(schematic);
 
@@ -86,34 +86,34 @@ export class SchematicsManager {
         ({ ...dict, [ camelize(option.name) ]: option.value }), {});
 
     const appRoot
-      = !blueprintProperties.includes('appRoot')
+      = !('appRoot' in blueprintProperties)
         ? null
         : cliApp.root;
 
     const sourceDir
-      = !blueprintProperties.includes('sourceDir')
+      = !('sourceDir' in blueprintProperties)
         ? null
         : cliApp.root;
 
     const path
-      = !blueprintProperties.includes('path')
+      = !('path' in blueprintProperties)
         ? null
         : options.path || defaults.path;
 
     const module
-      = !blueprintProperties.includes('module')
+      = !('module' in blueprintProperties)
         ? null
         : null; // TODO: Find module somehow? Maybe shcematics can help??
 
     const skipImport
-      = !blueprintProperties.includes('skipImport')
+      = !('skipImport' in blueprintProperties)
         ? null
         : module
           ? !!options.skipImport
           : true;
 
     const htmlTemplate
-      = !blueprintProperties.includes('htmlTemplate')
+      = !('htmlTemplate' in blueprintProperties)
         ? null
         : `<!-- generated with angular-gui -->\n`
         + `<p>${ classify(options.name + '-' + schematic.name) } Works!</p>`;
@@ -126,18 +126,16 @@ export class SchematicsManager {
       path,
       skipImport,
       sourceDir,
-      dryRun: true,
-      name: 'X',
     }, o => o === null);
   }
 
   private commandValues(schematic: FileSystemSchematicDesc, guiOptions = []) {
-    const blueprintProperties
-      = Object.keys(schematic.schemaJson.properties);
+    const blueprintProperties: any
+      = schematic.schemaJson.properties;
 
     return guiOptions
       .filter(option =>
-        blueprintProperties.includes(camelize(option.name)))
+        camelize(option.name) in blueprintProperties)
       .reduce((dict, option) => ({
         ...dict,
         [ camelize(option.name) ]: option.value
@@ -149,8 +147,9 @@ export class SchematicsManager {
     app.logger(`Executing command: ${ command.value }`);
 
     const options: any
-      = (command.options || []).reduce((dict, option) =>
-        ({ ...dict, [ camelize(option.name) ]: option.value }), {});
+      = (command.options || [])
+        .reduce((dict, option) =>
+          ({ ...dict, [ camelize(option.name) ]: option.value }), {});
 
     const cliApp
       = app.cliConfig.apps.find(a => a.name === options.app)
@@ -162,8 +161,6 @@ export class SchematicsManager {
     const collection
       = options.collection
       || app.cliCollection;
-
-    const dryRun = options.dryRun;
 
     this.host.registerOptionsTransform((schematic: any, options: {}) => {
       const transformed = {
@@ -200,38 +197,36 @@ export class SchematicsManager {
           error = true;
           break;
         case 'update':
-          loggingQueue.push(`${ app.terminal.white('UPDATE') } ${ event.path } (${ event.content.length } bytes)`);
+          loggingQueue.push(`UPDATE ${ event.path } (${ event.content.length } bytes)`);
           break;
         case 'create':
-          loggingQueue.push(`${ app.terminal.green('CREATE') } ${ event.path } (${ event.content.length } bytes)`);
+          loggingQueue.push(`CREATE ${ event.path } (${ event.content.length } bytes)`);
           break;
         case 'delete':
-          loggingQueue.push(`${ app.terminal.yellow('DELETE') } ${ event.path }`);
+          loggingQueue.push(`DELETE ${ event.path }`);
           break;
         case 'rename':
-          loggingQueue.push(`${ app.terminal.blue('RENAME') } ${ event.path } => ${ event.to }`);
+          loggingQueue.push(`RENAME ${ event.path } => ${ event.to }`);
           break;
       }
     });
 
     schematic.call({}, tree$)
-      .do(() => console.time('schematics.call()'))
       .map((tree: Tree) => Tree.optimize(tree))
       .concatMap((tree: Tree) => {
         return dryRunSink
-          .commit(tree).take(1)
+          .commit(tree)
           .ignoreElements()
           .concat(of(tree));
       })
       .concatMap((tree: Tree) => {
-        return dryRun || error
+        return options.dryRun || error
           ? of(tree)
           : fsSink
-            .commit(tree).take(1)
+            .commit(tree)
             .ignoreElements()
             .concat(of(tree));
       })
-      .do(() => console.timeEnd('schematics.call()'))
       .subscribe({
         // next: () => loggingQueue.forEach(log => app.logger(log)),
         error: (error) => {

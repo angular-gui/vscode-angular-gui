@@ -3,4 +3,5 @@ node_modules
 .vscode-test/
 .vsix
 .angular-gui.json
+.angular-gui
 .ng-gui

@@ -58,12 +58,12 @@ export class FilesManager {
   }
 
   saveClientConfig(data) {
-    const filename = join(this.extensionRoot, '.angular-gui.json');
+    const filename = join(this.extensionFolder, '.angular-gui.json');
     return helpers.writeFile(filename, data);
   }
 
   deleteClientConfig() {
-    const filename = join(this.extensionRoot, '.angular-gui.json');
+    const filename = join(this.extensionFolder, '.angular-gui.json');
     return helpers.unlinkp(filename);
   }
 
@@ -88,7 +88,7 @@ export class FilesManager {
   }
 
   get clientConfig() {
-    const filename = join(this.extensionRoot, '.angular-gui.json');
+    const filename = join(this.extensionFolder, '.angular-gui.json');
     return helpers.readFile(filename);
   }
 

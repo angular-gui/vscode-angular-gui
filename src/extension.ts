@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
     // config[ 'workspaceRoot' ] = config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
   }
 
-  const output = vscode.window.createOutputChannel('Angular GUI');
+  const output = vscode.window.createOutputChannel('GUI for Angular');
   function logger(message) {
     output.appendLine(message);
   }
@@ -34,15 +34,15 @@ export function activate(context: vscode.ExtensionContext) {
   function toggleStatus(value: 'listening' | 'connected' | 'disconnected') {
     if (value === 'connected') {
       status.command = 'extension.disconnect';
-      status.tooltip = 'Angular GUI connected (click to disconnect)'
-      status.color = '#2dcae2';
+      status.tooltip = 'GUI for Angular connected (click to disconnect)'
+      status.color = '#5f7c8a';
     } else if (value === 'listening') {
       status.command = 'extension.disconnect';
       status.tooltip = 'Waiting for connection (click to disconnect)';
-      status.color = '#edb834';
+      status.color = '#ffc107';
     } else if (value === 'disconnected') {
       status.command = 'extension.connectOnline';
-      status.tooltip = 'Start Angular GUI';
+      status.tooltip = 'Start GUI for Angular';
       status.color = null;
     }
   }

@@ -10,7 +10,7 @@ export interface Command {
 
 export const defaultConfiguration = {
   port: 4300,
-  rootDir: '.ng-gui',
+  rootDir: '.angular-gui',
   options: {
     environment: [
       'development',
