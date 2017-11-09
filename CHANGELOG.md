@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
+# Version 0.1.4: Minor fixes
+
+* Workaround for `ng generate` issue with `engineHost.registerOptionsTransform()` [#266](https://github.com/angular/devkit/issues/266)
+* Add support for multiple VSCode workspaces
+
 # Version 0.1.3: Minor fixes
 
 * Add `completion`, `e2e` and `eject` commands

@@ -14,17 +14,15 @@ Run Angular CLI from your browser!
 
 ![Alpha release](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/angular-gui-alpha-0.1.2.gif)
 
-## Installation and Usage
+## Activation
 
-1. To install extension, [download VSIX file](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/bin/angular-gui-0.1.3.vsix) and install it with VSCode command `Extensions: Install from VSIX...` from **Command Palette**, [more info](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix). 
+Extension will be activated for Angular CLI projects (if there is a `.angular-cli.json` in project root).
 
-2. Extension will be activated for Angular CLI projects (if there is a `.angular-cli.json` in project root).
-
-3. Start local server (listening on localhost:4300) by clicking on shild icon in VSCode status bar, or with VSCode command `GUI for Angular: Start in Online mode` from **Command Palette**.
-
-4. Open https://angular-gui.firebaseapp.com
-
-5. Enjoy!
+1. Start local server (listening on localhost:4300) from:
+    * status bar icon: ![shield icon](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/octicon-shield.png)
+    * command palette: `GUI for Angular: Start in Online mode`
+2. Open https://angular-gui.firebaseapp.com
+3. Enjoy!
 
 ## Extension Settings
 
@@ -55,7 +53,6 @@ will replace `prefix` option input from **text input** to **select box** for all
 
 ## Known Issues
 
-* Possible memory leak with `ng generate`.
 * Commands should work for *happy-path*, there are no error messages or notifications. 
 
 ## TO-DO:
