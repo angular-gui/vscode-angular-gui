@@ -48,13 +48,15 @@
     ]
   },
   "scripts": {
-    "build": "sh build.sh",
+    "dev": "sh dev.sh",
     "compile": "tsc -p ./",
     "debug": "webpack",
     "package": "vsce package",
     "postinstall": "node ./node_modules/vscode/bin/install",
+    "serve:local": "nodemon out/local.js",
     "test": "npm run compile && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "webpack",
+    "watch:local": "webpack --config webpack.local.js --display minimal --watch",
     "watch": "webpack --watch"
   },
   "devDependencies": {
@@ -73,6 +75,7 @@
   },
   "dependencies": {
     "@angular-devkit/schematics": "0.0.35",
+    "ansi-to-html": "^0.6.3",
     "express": "^4.16.2",
     "ps-tree": "^1.1.0",
     "rxjs": "^5.5.2",

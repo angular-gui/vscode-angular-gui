@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
+# Version 0.2.0: 
+
+* Emit notifications and error messages for commands
+
 # Version 0.1.4: Minor fixes
 
 * Workaround for `ng generate` issue with `engineHost.registerOptionsTransform()` [#266](https://github.com/angular/devkit/issues/266)

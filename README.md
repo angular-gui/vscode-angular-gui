@@ -53,12 +53,10 @@ will replace `prefix` option input from **text input** to **select box** for all
 
 ## Known Issues
 
-* Commands should work for *happy-path*, there are no error messages or notifications. 
+* N/A
 
 ## TO-DO:
 
-* Smarter defaults for schematics options
-* Better Feedback and Error Handling for executed commands
 * Support for custom shell commands
 * Tests!
 

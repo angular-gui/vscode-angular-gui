@@ -1,13 +1,10 @@
-import 'rxjs/add/operator/take';
-
-import { DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, Schematic, SchematicEngine, Tree } from '@angular-devkit/schematics';
+import { DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, SchematicEngine, Tree } from '@angular-devkit/schematics';
 import { FileSystemHost, FileSystemSchematicDesc, NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { camelize, classify, dasherize } from '@angular-devkit/core';
 import { omitBy, sort } from './utils';
 
 import { Command } from './models';
 import { GUI } from './gui.model';
-import { copyFolder } from './helpers';
 import { join } from 'path';
 import { of } from 'rxjs/observable/of';
 
@@ -116,7 +113,7 @@ export class SchematicsManager {
       = !('htmlTemplate' in blueprintProperties)
         ? null
         : `<!-- generated with angular-gui -->\n`
-        + `<p>${ classify(options.name + '-' + schematic.name) } Works!</p>`;
+        + `<p>\n  ${ classify(options.name + '-' + schematic.name) } Works!\n</p>`;
 
     return omitBy({
       ...defaults,
@@ -142,14 +139,13 @@ export class SchematicsManager {
       }), {});
   }
 
-  generateBlueprint(command: Command, socket: SocketIO.Socket, app: GUI) {
-    socket.emit('start', true);
-    app.logger(`Executing command: ${ command.value }`);
-
+  generateBlueprint(command: Command, app: GUI) {
     const options: any
       = (command.options || [])
-        .reduce((dict, option) =>
-          ({ ...dict, [ camelize(option.name) ]: option.value }), {});
+        .reduce((dict, option) => ({
+          ...dict,
+          [ camelize(option.name) ]: option.value
+        }), {});
 
     const cliApp
       = app.cliConfig.apps.find(a => a.name === options.app)
@@ -221,7 +217,7 @@ export class SchematicsManager {
       }
     });
 
-    schematic.call(transformedOptions, tree$)
+    return schematic.call(transformedOptions, tree$)
       .map((tree: Tree) => Tree.optimize(tree))
       .concatMap((tree: Tree) => {
         return dryRunSink
@@ -230,23 +226,14 @@ export class SchematicsManager {
           .concat(of(tree));
       })
       .concatMap((tree: Tree) => {
-        return options.dryRun || error
+        return options.dryRun
+          || error
           ? of(tree)
           : fsSink
             .commit(tree)
             .ignoreElements()
             .concat(of(tree));
       })
-      .subscribe({
-        // next: () => loggingQueue.forEach(log => app.logger(log)),
-        error: (error) => {
-          app.logger(error.message);
-          socket.emit('failure', { command, message: error.message });
-        },
-        complete: () => {
-          socket.emit('finish', command);
-          loggingQueue.forEach(log => app.logger(log));
-        }
-      });
+      .map(() => loggingQueue);
   }
 }

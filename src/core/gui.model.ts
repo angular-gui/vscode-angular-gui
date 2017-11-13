@@ -5,6 +5,7 @@ import { defaultConfiguration } from './models';
 export interface GUI {
   cliConfig;
   cliCollection: string;
+  converter;
   config: typeof defaultConfiguration;
   files: FilesManager;
   logger;

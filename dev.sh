@@ -4,4 +4,3 @@ concurrently --kill-others \
   "webpack --config webpack.local.js --display minimal -w" \
   "nodemon out/local.js"
 
-# webpack --config webpack.local.js --display minimal

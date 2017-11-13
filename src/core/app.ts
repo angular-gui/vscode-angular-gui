@@ -1,3 +1,4 @@
+import * as Converter from 'ansi-to-html';
 import * as commands from '../commands';
 import * as express from 'express';
 import * as io from 'socket.io';
@@ -15,6 +16,7 @@ export class AngularGUI {
   private app;
   cliConfig;
   cliCollection;
+  converter = new Converter();
   files: FilesManager;
   server;
   schematics: SchematicsManager;

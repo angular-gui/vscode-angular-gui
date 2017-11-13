@@ -1,8 +1,11 @@
 export interface Command {
-  $exec?: number;
   description: string;
   name: string;
   options?: Array<{ name: string; value: any; }>;
+  process?: {
+    pid: number;
+    log: string[];
+  };
   script: string;
   type: string;
   value: string;

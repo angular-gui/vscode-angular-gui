@@ -8,7 +8,7 @@ import { AngularGUI, defaultConfiguration as config } from './core';
  * for me it's "webapps", change this to match your setup
  */
 config[ 'workspaceRoot' ] = path.resolve(__dirname, '..', '..', 'webapps');
-config[ 'extensionRoot' ] = path.resolve(__dirname, '..', '.angular-gui');
+config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
 config[ 'local' ] = true;
 
 const gui = new AngularGUI(config, console.log);
