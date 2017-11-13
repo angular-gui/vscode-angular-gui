@@ -12,6 +12,8 @@ import { AngularGUI, defaultConfiguration as config } from './core';
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
+  // const _cofig = vscode.workspace.getConfiguration('angular-gui');
+
   // TODO: use vscode configuration
   try {
     const rootUri = vscode.workspace.workspaceFolders[ 0 ];

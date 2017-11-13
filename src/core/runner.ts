@@ -89,7 +89,7 @@ export function execCommand(command: Command, socket: SocketIO.Socket, app: GUI)
     socket.emit('progress', app.converter.toHtml(data)))
 
   child.on('exit', (code, signal) => {
-    if (!code) { 
+    if (!code) {
       socket.emit('success', successMessage);
     }
   });

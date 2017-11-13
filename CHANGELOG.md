@@ -1,9 +1,14 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
-# Version 0.2.0: 
+# Version 0.2.0:
 
 * Emit notifications and error messages for commands
+* Add npm script to run saved commands
+
+You can now run saved commands by name, with:
+
+    npm run . build.test
 
 # Version 0.1.4: Minor fixes
 
@@ -24,10 +29,6 @@ All notable changes to the "angular-gui" extension will be documented in this fi
 You can save commands as shell scripts and reuse them. Commands are saved in workspace folder `.angular-gui/commands` and can be executed from shell, for example:
 
     sh .angular-gui/commands/build.test.sh
-
-> Comming soon: NPM script to run commands by name
-
-    npm run . build.test
 
 **Overview of all available command options**
 

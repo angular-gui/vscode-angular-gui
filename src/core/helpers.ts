@@ -14,7 +14,7 @@ export function existsp(o) {
 
 export function globp(folder, pattern): Promise<string[]> {
   return new Promise(res => {
-    glob(`${ folder }/${ pattern }`, (error, matches) =>
+    glob(`${folder}/${pattern}`, (error, matches) =>
       res(error as any || matches));
   });
 }
@@ -80,7 +80,7 @@ export async function readFiles(folder, pattern) {
   if (!files.length) { return files; }
 
   return Promise.all(files.map(o => readFile(o).then(data => {
-    return { [ path.basename(o) ]: data };
+    return { [path.basename(o)]: data };
   })))
 }
 
@@ -98,5 +98,8 @@ export async function writeFile(filepath, data, backup = false): Promise<any> {
 
 export async function updateJson<T>(filepath, transform: (o: T) => T, backup = false) {
   const data = await readFile(filepath);
-  return writeFile(filepath, transform(data), backup);
+  const updated = transform(data);
+  return updated
+    ? writeFile(filepath, updated, backup)
+    : Promise.resolve(true);
 }

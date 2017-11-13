@@ -94,7 +94,7 @@ export class AngularGUI {
 
   /**
    * Create `.angular-gui.json` to be used as configuration for client.
-   * 
+   *
    * Rebuilding is done when `.angular-gui.json` does not exist,
    * or manually via extension command `extension.rebuildConfiguration`
    */
@@ -105,6 +105,7 @@ export class AngularGUI {
         .filter((v, i, a) => a.indexOf(v) === i);
 
     await this.files.copyCliSchematics(this.config.options.collection);
+    await this.files.createRunnerScript();
 
     this.config.options.blueprint
       = this.schematics.availableBlueprints(this.cliCollection)
@@ -126,16 +127,16 @@ export class AngularGUI {
   }
 
   /**
-   * Updates CLI Command "avaibaleOptions" with values from config, 
+   * Updates CLI Command "avaibaleOptions" with values from config,
    * and sets option "default" to first item from config array.
-   * 
+   *
    * For example:
-   * 
+   *
    *   config.options.environment: [
    *     'development',
    *     'production',
    *   ]
-   * 
+   *
    * will be used for commands that have `environment` option,
    * like "build", "serve", "test"
    * and default value will be "development"
@@ -155,4 +156,4 @@ export class AngularGUI {
     return { ...command, availableOptions };
   }
 }
-// 
+//

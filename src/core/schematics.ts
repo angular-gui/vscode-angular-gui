@@ -1,6 +1,6 @@
 import { DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, SchematicEngine, Tree } from '@angular-devkit/schematics';
 import { FileSystemHost, FileSystemSchematicDesc, NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
-import { camelize, classify, dasherize } from '@angular-devkit/core';
+import { camelize, classify, dasherize, terminal } from '@angular-devkit/core';
 import { omitBy, sort } from './utils';
 
 import { Command } from './models';
@@ -16,7 +16,7 @@ export class SchematicsManager {
 
   /**
    * List available schematics for the collection.
-   * 
+   *
    * @param collection Name of the collection
    */
   availableBlueprints(collection: string) {
@@ -27,10 +27,10 @@ export class SchematicsManager {
 
   /**
    * Normalize schematic to CLI Command interface
-   * 
+   *
    * @param collection Name of the collection
    * @param blueprint Name of the blueprint
-   * 
+   *
    */
   blueprintCommand(collection: string, blueprint: string) {
     const engine: SchematicEngine<any, any> = this.engine;
@@ -171,7 +171,7 @@ export class SchematicsManager {
     const tree$
       = of(new FileSystemTree(fsHost))
 
-    /** 
+    /**
      * this.host.registerOptionsTransform() is an observable with no teardown ???
      * My workaround is not to use it and process options synchronously...
      */
@@ -199,20 +199,20 @@ export class SchematicsManager {
       switch (event.kind) {
         case 'error':
           const desc = event.description == 'alreadyExist' ? 'already exists' : 'does not exist.';
-          loggingQueue.push(`ERROR! ${ event.path } ${ desc }.`);
+          loggingQueue.push(`${ terminal.red('ERROR!') } ${ event.path } ${ desc }.`);
           error = true;
           break;
         case 'update':
-          loggingQueue.push(`UPDATE ${ event.path } (${ event.content.length } bytes)`);
+          loggingQueue.push(`${ terminal.white('UPDATE') } ${ event.path } (${ event.content.length } bytes)`);
           break;
         case 'create':
-          loggingQueue.push(`CREATE ${ event.path } (${ event.content.length } bytes)`);
+          loggingQueue.push(`${ terminal.green('CREATE') } ${ event.path } (${ event.content.length } bytes)`);
           break;
         case 'delete':
-          loggingQueue.push(`DELETE ${ event.path }`);
+          loggingQueue.push(`${ terminal.yellow('DELETE') } ${ event.path }`);
           break;
         case 'rename':
-          loggingQueue.push(`RENAME ${ event.path } => ${ event.to }`);
+          loggingQueue.push(`${ terminal.blue('RENAME') } ${ event.path } => ${ event.to }`);
           break;
       }
     });
