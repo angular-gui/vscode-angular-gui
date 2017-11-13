@@ -12,6 +12,8 @@ import { SchematicsManager } from './schematics';
 import { Server } from 'http';
 import { sort } from './utils';
 
+const VERSION = '0.2.0';
+
 export class AngularGUI {
   private app;
   cliConfig;
@@ -63,7 +65,7 @@ export class AngularGUI {
         runner: await this.files.hasRunnerScript,
       };
 
-      socket.emit('init', { ...clientConfig, cliConfig, guiCommands, guiConfig });
+      socket.emit('init', { ...clientConfig, cliConfig, guiCommands, guiConfig, VERSION });
 
       socket.on('action', (command: Command) =>
         processAction(command, socket, this));
@@ -100,18 +102,18 @@ export class AngularGUI {
    */
   async rebuild() {
 
-    this.config.options.collection
+    this.config.commandOptions.collection
       = [ this.cliCollection, '@schematics/angular' ]
         .filter((v, i, a) => a.indexOf(v) === i);
 
-    await this.files.copyCliSchematics(this.config.options.collection);
+    await this.files.copyCliSchematics(this.config.commandOptions.collection);
     await this.files.createRunnerScript();
 
-    this.config.options.blueprint
+    this.config.commandOptions.blueprint
       = this.schematics.availableBlueprints(this.cliCollection)
 
     const cliSchematics
-      = this.config.options.blueprint
+      = this.config.commandOptions.blueprint
         .map(blueprint =>
           this.schematics.blueprintCommand(this.cliCollection, blueprint))
         .map(command => this.updateCommandOptions(command));
@@ -132,7 +134,7 @@ export class AngularGUI {
    *
    * For example:
    *
-   *   config.options.environment: [
+   *   config.commandOptions.environment: [
    *     'development',
    *     'production',
    *   ]
@@ -145,12 +147,12 @@ export class AngularGUI {
     const availableOptions
       = command.availableOptions
         .map(option =>
-          !(option.name in this.config.options)
+          !(option.name in this.config.commandOptions)
             ? option
             : ({
               ...option,
-              values: this.config.options[ option.name ],
-              default: this.config.options[ option.name ][ 0 ],
+              values: this.config.commandOptions[ option.name ],
+              default: this.config.commandOptions[ option.name ][ 0 ],
             }))
 
     return { ...command, availableOptions };

@@ -6,21 +6,22 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { AngularGUI, defaultConfiguration as config } from './core';
+import { AngularGUI, defaultConfiguration } from './core';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-  // const _cofig = vscode.workspace.getConfiguration('angular-gui');
+  const config
+    = vscode.workspace.getConfiguration()
+      .get('angular-gui', defaultConfiguration);
 
-  // TODO: use vscode configuration
   try {
     const rootUri = vscode.workspace.workspaceFolders[ 0 ];
     config[ 'workspaceRoot' ] = rootUri.uri.fsPath;
     config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
   } catch  {
-    // config[ 'workspaceRoot' ] = config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
+    return vscode.window.showErrorMessage('FATAL ERROR: Cannot access workspace.');
   }
 
   const output = vscode.window.createOutputChannel('GUI for Angular');

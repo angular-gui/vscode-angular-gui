@@ -1,9 +1,10 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
-# Version 0.2.0:
+# Version 0.2.0: Alpha release
 
 * Emit notifications and error messages for commands
+* Add ability to configure options and set defaults in VSCode settings
 * Add npm script to run saved commands
 
 You can now run saved commands by name, with:
@@ -34,14 +35,8 @@ You can save commands as shell scripts and reuse them. Commands are saved in wor
 
 Command options are taken from Angular CLI source code; `ng generate` command options are loaded directly from project schematics. Any option can be configured with custom defaults.
 
-> Comming soon: Ability to set defaults in VSCode settings
-
 **Support for multiple schematics**
 
 Schematics options are normalized and extended schematics are resolved.
 
 > @nrwl/schematics are supported
-
-# Version 0.0.1: Proof of concept
-
-![Proof of concept](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/angular-gui-alpha-0.0.1.gif)

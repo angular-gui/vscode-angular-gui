@@ -110,7 +110,7 @@ export function killCommand(command: Command, socket: SocketIO.Socket, app: GUI)
   const failureMessage = '';
   app.logger(terminalMessage);
 
-  pstree(command.process.pid, (error, children) => {
+  pstree(command.pid, (error, children) => {
     children.map(p => p.PID).forEach(pid => {
       try { process.kill(pid, 'SIGKILL'); } catch { }
     })

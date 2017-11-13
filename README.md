@@ -10,15 +10,15 @@ Run Angular CLI from your browser!
 * Save and reuse commands
 * Support for multiple schematics
 * Access to command options that are locked in CLI
-* Custom defaults for command options
+* Configurable defaults for command options
 
 ![Alpha release](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/angular-gui-alpha-0.1.2.gif)
 
 ## Activation
 
-Extension will be activated for Angular CLI projects (if there is a `.angular-cli.json` in project root).
+Extension will be activated for Angular CLI projects (if there is a `.angular-cli.json` in project root). `.angular-cli.json` **is required** and it is used to generate configuration file for the client.
 
-1. Start local server (listening on localhost:4300) from:
+1. Start local server (listening on localhost:4300, by default) from:
     * status bar icon: ![shield icon](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/octicon-shield.png)
     * command palette: `GUI for Angular: Start in Online mode`
 2. Open https://angular-gui.firebaseapp.com
@@ -26,13 +26,12 @@ Extension will be activated for Angular CLI projects (if there is a `.angular-cl
 
 ## Extension Settings
 
-> Extension Settings for `angular-gui` will be available in next release.
-
 This extension contributes the following settings:
 
-* `angular-gui.port`: port for Socket connection
-* `angular-gui.rootDir`: folder for extension files
-* `angular-gui.options`: CLI command options' values and defaults
+* `angular-gui.port`: Port for socket connection
+* `angular-gui.rootDir`: Workspace folder for GUI for Angular commands and settings
+* `angular-gui.npmRunner`: Name for the runner script that can be used to excute commands from terminal by name
+* `angular-gui.commandOptions`: Command options' values and defaults
   * `environment`: list of available environments
   * `target`: list of available targets
   * `collection`: list of available schematic collections
@@ -40,9 +39,9 @@ This extension contributes the following settings:
 
 Default value will be set to the first item from the list.
 
-You can add any other CLI command option to `angular-gui.options`, for example:
+You can add any other CLI command option to `angular-gui.commandOptions`, for example:
 
-    "angular-gui.options.prefix": [
+    "angular-gui.commandOptions.prefix": [
         "app", 
         "abc"
     ]
@@ -53,10 +52,11 @@ will replace `prefix` option input from **text input** to **select box** for all
 
 ## Known Issues
 
-* N/A
+* Cannot change port for socket connection on client.
 
 ## TO-DO:
 
+* Add option to change port on client
 * Support for custom shell commands
 * Tests!
 

@@ -57,7 +57,7 @@ export class FilesManager {
     const packagePath = join(this.workspaceRoot, 'package.json');
     return helpers.writeFile(filename, script)
       .then(() => helpers.updateJson<any>(packagePath, data => {
-        const alias = this.config.runner;
+        const alias = this.config.npmRunner;
         const shouldUpdate
           = !data.scripts
           || !(alias in data.scripts)

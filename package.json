@@ -2,7 +2,7 @@
   "name": "angular-gui",
   "displayName": "GUI for Angular",
   "description": "Run Angular CLI from your browser",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "publisher": "sasxa-net",
   "repository": {
     "type": "git",
@@ -45,7 +45,52 @@
         "command": "extension.disconnect",
         "title": "GUI for Angular: Stop"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "GUI for Angular",
+      "properties": {
+        "angular-gui.port": {
+          "type": "number",
+          "default": 4300,
+          "description": "Port for socket connection"
+        },
+        "angular-gui.rootDir": {
+          "type": "string",
+          "default": ".angular-gui",
+          "description": "Workspace folder for GUI for Angular commands and settings"
+        },
+        "angular-gui.npmRunner": {
+          "type": "string",
+          "default": ".",
+          "description": "Name for the runner script that can be used to excute commands from terminal by name: \"npm run . <name>\""
+        },
+        "angular-gui.commandOptions": {
+          "type": "object",
+          "description": "Command options' values and defaults",
+          "properties": {
+            "prefix": "array"
+          },
+          "default": {
+            "environment": [
+              "development",
+              "production"
+            ],
+            "target": [
+              "development",
+              "production"
+            ],
+            "collection": [
+              "@schematics/angular"
+            ],
+            "styleext": [
+              "scss",
+              "styl",
+              "css"
+            ]
+          }
+        }
+      }
+    }
   },
   "scripts": {
     "dev": "sh dev.sh",

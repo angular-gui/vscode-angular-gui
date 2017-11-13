@@ -2,10 +2,7 @@ export interface Command {
   description: string;
   name: string;
   options?: Array<{ name: string; value: any; }>;
-  process?: {
-    pid: number;
-    log: string[];
-  };
+  pid: number;
   script: string;
   type: string;
   value: string;
@@ -14,8 +11,8 @@ export interface Command {
 export const defaultConfiguration = {
   port: 4300,
   rootDir: '.angular-gui',
-  runner: '.',
-  options: {
+  npmRunner: '.',
+  commandOptions: {
     environment: [
       'development',
       'production',

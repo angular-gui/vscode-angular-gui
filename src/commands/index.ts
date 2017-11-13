@@ -1,5 +1,5 @@
 export * from './build';
-export * from './completion';
+// export * from './completion';
 // export * from './doc';
 export * from './e2e';
 export * from './eject';
