@@ -1,6 +1,20 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
+# Version 0.3.0: Alpha release
+
+## VSCode Extension
+
+* Feature: Add ability to open files from client
+* Fix: `commandOptions.environment` defaults are set to `['dev', 'prod']`
+* Refactor: generate command options
+
+## Web Client
+* Feature: Open files from output panel in VSCode
+* Design: Highlight important command options
+* Design: Hide progress messages in output
+* Fix: Generated command scripts can be correctly executed
+
 # Version 0.2.0: Alpha release
 
 * Emit notifications and error messages for commands

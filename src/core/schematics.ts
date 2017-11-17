@@ -1,6 +1,7 @@
 import { DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, SchematicEngine, Tree } from '@angular-devkit/schematics';
 import { FileSystemHost, FileSystemSchematicDesc, NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
-import { camelize, classify, dasherize, terminal } from '@angular-devkit/core';
+import { camelize, dasherize, terminal } from '@angular-devkit/core';
+import { generateCommandDefaults, generateCommandPaths, generateCommandValues } from './options';
 import { omitBy, sort } from './utils';
 
 import { Command } from './models';
@@ -63,82 +64,6 @@ export class SchematicsManager {
     };
   }
 
-  private blueprintDefaults(schematic: FileSystemSchematicDesc) {
-    return Object.entries(schematic.schemaJson.properties)
-      .filter(([ name, option ]) => 'default' in option)
-      .reduce((dict, [ name, option ]) => ({
-        ...dict,
-        [ name ]: option.default
-      }), {});
-  }
-
-  private commandDefaults(schematic: FileSystemSchematicDesc, guiOptions = [], cliApp) {
-    const blueprintProperties: any
-      = schematic.schemaJson.properties;
-
-    const defaults: any = this.blueprintDefaults(schematic);
-
-    const options
-      = guiOptions.reduce((dict, option) =>
-        ({ ...dict, [ camelize(option.name) ]: option.value }), {});
-
-    const appRoot
-      = !('appRoot' in blueprintProperties)
-        ? null
-        : cliApp.root;
-
-    const sourceDir
-      = !('sourceDir' in blueprintProperties)
-        ? null
-        : cliApp.root;
-
-    const path
-      = !('path' in blueprintProperties)
-        ? null
-        : options.path || defaults.path;
-
-    const module
-      = !('module' in blueprintProperties)
-        ? null
-        : null; // TODO: Find module somehow? Maybe shcematics can help??
-
-    const skipImport
-      = !('skipImport' in blueprintProperties)
-        ? null
-        : module
-          ? !!options.skipImport
-          : true;
-
-    const htmlTemplate
-      = !('htmlTemplate' in blueprintProperties)
-        ? null
-        : `<!-- generated with angular-gui -->\n`
-        + `<p>\n  ${ classify(options.name + '-' + schematic.name) } Works!\n</p>`;
-
-    return omitBy({
-      ...defaults,
-      appRoot,
-      htmlTemplate,
-      module,
-      path,
-      skipImport,
-      sourceDir,
-    }, o => o === null);
-  }
-
-  private commandValues(schematic: FileSystemSchematicDesc, guiOptions = []) {
-    const blueprintProperties: any
-      = schematic.schemaJson.properties;
-
-    return guiOptions
-      .filter(option =>
-        camelize(option.name) in blueprintProperties)
-      .reduce((dict, option) => ({
-        ...dict,
-        [ camelize(option.name) ]: option.value
-      }), {});
-  }
-
   generateBlueprint(command: Command, app: GUI) {
     const options: any
       = (command.options || [])
@@ -178,8 +103,9 @@ export class SchematicsManager {
 
     // this.host.registerOptionsTransform((schematic: any, options: {}) => {
     //   const transformed = {
-    //     ...this.commandDefaults(schematic, command.options, cliApp),
-    //     ...this.commandValues(schematic, command.options),
+    //     ...generateCommandDefaults(schematic.description, command.options, app.cliConfig),
+    //     ...generateCommandValues(schematic.description, command.options, app.cliConfig),
+    //     ...generateCommandPaths(schematic.description, command.options, app.cliConfig),
     //   };
 
     //   console.log(`registerOptionsTransform`, tree$);
@@ -187,12 +113,13 @@ export class SchematicsManager {
     // });
 
     const transformedOptions = {
-      ...this.commandDefaults(schematic.description, command.options, cliApp),
-      ...this.commandValues(schematic.description, command.options),
+      ...generateCommandDefaults(schematic.description, command.options, app.cliConfig),
+      ...generateCommandValues(schematic.description, command.options, app.cliConfig),
+      ...generateCommandPaths(schematic.description, command.options, app.cliConfig),
     };
+    // console.log(transformedOptions);
 
     const loggingQueue: string[] = [];
-
     let error = false;
 
     dryRunSink.reporter.subscribe((event: DryRunEvent) => {

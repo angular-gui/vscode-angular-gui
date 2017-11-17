@@ -4,18 +4,19 @@ import * as express from 'express';
 import * as io from 'socket.io';
 import * as stoppable from 'stoppable';
 
-import { processAction, processCommand } from './runner';
-
 import { Command } from './models';
 import { FilesManager } from './files';
 import { SchematicsManager } from './schematics';
 import { Server } from 'http';
+import { Subject } from 'rxjs/Subject';
+import { processCommand } from './runner';
 import { sort } from './utils';
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 
 export class AngularGUI {
   private app;
+  action = new Subject();
   cliConfig;
   cliCollection;
   converter = new Converter();
@@ -40,7 +41,7 @@ export class AngularGUI {
     this.socket = io(this.server).on('connection', async socket => {
       const cliConfig = this.cliConfig
         = await this.files.cliConfig;
-
+        
       const cliCollection = this.cliCollection
         = this.cliConfig.defaults.schematics
           ? this.cliConfig.defaults.schematics.collection
@@ -68,7 +69,7 @@ export class AngularGUI {
       socket.emit('init', { ...clientConfig, cliConfig, guiCommands, guiConfig, VERSION });
 
       socket.on('action', (command: Command) =>
-        processAction(command, socket, this));
+        this.action.next(command));
 
       socket.on('command', (command: Command) =>
         processCommand(command, socket, this));
@@ -77,7 +78,7 @@ export class AngularGUI {
         this.logger(`Client disconnected.`);
       });
     });
-
+    
     this.socket.on('connection', socket => {
       this.logger(`Client connected from ${ socket.handshake.headers.origin }.`);
       statusUpdate('connected');
@@ -87,6 +88,8 @@ export class AngularGUI {
       this.logger(`Server terminated`);
       statusUpdate('listening');
     });
+
+    return this.action.asObservable();
   }
 
   stop(statusUpdate) {
@@ -134,12 +137,12 @@ export class AngularGUI {
    *
    * For example:
    *
-   *   config.commandOptions.environment: [
+   *   config.commandOptions.target: [
    *     'development',
    *     'production',
    *   ]
    *
-   * will be used for commands that have `environment` option,
+   * will be used for commands that have `target` option,
    * like "build", "serve", "test"
    * and default value will be "development"
    */

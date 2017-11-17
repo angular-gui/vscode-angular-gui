@@ -2,7 +2,7 @@
   "name": "angular-gui",
   "displayName": "GUI for Angular",
   "description": "Run Angular CLI from your browser",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "sasxa-net",
   "repository": {
     "type": "git",
@@ -72,8 +72,8 @@
           },
           "default": {
             "environment": [
-              "development",
-              "production"
+              "dev",
+              "prod"
             ],
             "target": [
               "development",
@@ -98,7 +98,7 @@
     "debug": "webpack",
     "package": "vsce package",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "serve:local": "nodemon out/local.js",
+    "serve:local": "node out/local.js",
     "test": "npm run compile && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "webpack",
     "watch:local": "webpack --config webpack.local.js --display minimal --watch",

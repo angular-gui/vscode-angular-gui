@@ -14,8 +14,8 @@ export const defaultConfiguration = {
   npmRunner: '.',
   commandOptions: {
     environment: [
-      'development',
-      'production',
+      'dev',
+      'prod',
     ],
     target: [
       'development',

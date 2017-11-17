@@ -53,8 +53,9 @@ will replace `prefix` option input from **text input** to **select box** for all
 ## Known Issues
 
 * Cannot change port for socket connection on client.
+* Module resolution for generate command isn't working. `--skip-import true` is set for all generate commands.
 
-## TO-DO:
+## TODO:
 
 * Add option to change port on client
 * Support for custom shell commands
@@ -64,3 +65,10 @@ will replace `prefix` option input from **text input** to **select box** for all
 
 * [GUI for Angular VSCode Extension](https://github.com/angular-gui/vscode-angular-gui/blob/master/CHANGELOG.md)
 * [GUI for Angular Client](https://github.com/angular-gui/client-angular-gui/blob/master/CHANGELOG.md)
+
+## Feedback
+
+Please use following repositories to report bugs, ask questions and give feedback:
+
+* [GUI for Angular VSCode Extension](https://github.com/angular-gui/vscode-angular-gui/issues)
+* [GUI for Angular Client](https://github.com/angular-gui/client-angular-gui/issues)

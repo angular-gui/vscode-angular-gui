@@ -11,6 +11,7 @@ import { AngularGUI, defaultConfiguration } from './core';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  let subscription;
 
   const config
     = vscode.workspace.getConfiguration()
@@ -25,12 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   const output = vscode.window.createOutputChannel('GUI for Angular');
-  function logger(message) {
-    output.appendLine(message);
-  }
-
-  const gui = new AngularGUI(config, logger);
-
+  const gui = new AngularGUI(config, message => output.appendLine(message));
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
   status.text = '$(shield)';
 
@@ -50,6 +46,19 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  function processAction(action) {
+    switch (action.type) {
+      case 'open':
+        vscode.workspace
+          .openTextDocument(action.payload)
+          .then(doc => vscode.window.showTextDocument(doc))
+        break;
+
+      default:
+        break;
+    }
+  }
+
   toggleStatus('disconnected');
   status.show();
 
@@ -63,11 +72,14 @@ export function activate(context: vscode.ExtensionContext) {
   // const { server, socket } = start({ port: 4321 }, output);
   const online = vscode.commands
     .registerCommand('extension.connectOnline', () =>
-      gui.start(toggleStatus));
+      subscription = gui.start(toggleStatus)
+        .subscribe(processAction));
 
   const disconnect = vscode.commands
-    .registerCommand('extension.disconnect', () =>
-      gui.stop(toggleStatus));
+    .registerCommand('extension.disconnect', () => {
+      gui.stop(toggleStatus);
+      if (subscription) { subscription.unsubscribe(); }
+    });
 
   const rebuild = vscode.commands
     .registerCommand('extension.rebuildConfiguration', () =>

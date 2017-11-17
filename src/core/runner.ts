@@ -1,14 +1,20 @@
 import * as process from 'process';
 import * as pstree from 'ps-tree';
-import * as shell from 'shelljs';
 
-import { ChildProcess } from 'child_process';
 import { Command } from './models';
 import { GUI } from './gui.model';
 import { dasherize } from '@angular-devkit/core';
+import { exec } from 'child_process';
 
-export function processAction(command: Command, socket: SocketIO.Socket, app: GUI) {
-  switch (command.type) {
+function emitProgress(data, socket: SocketIO.Socket, app: GUI) {
+  const progressRegexp = /^(\d+%|[\x00-\x1F])/i;
+  const nonASCIIRegexp = /[^\x20-\x7F]/g;
+
+  const output
+    = data.toString().replace(nonASCIIRegexp, '').trim();
+
+  if (output && !progressRegexp.test(output)) {
+    socket.emit('progress', app.converter.toHtml(data));
   }
 }
 
@@ -23,9 +29,6 @@ export function processCommand(command: Command, socket: SocketIO.Socket, app: G
 
     case 'generate':
       return generateCommand(command, socket, app);
-
-    // case 'init':
-    //   return initCommand(command, socket, app);
 
     case 'kill':
       return killCommand(command, socket, app);
@@ -66,27 +69,24 @@ export function execCommand(command: Command, socket: SocketIO.Socket, app: GUI)
   const failureMessage = '';
   app.logger(terminalMessage);
 
-  const script = command.script.replace(/^# (.*) \n/gm, '');
   const options = {
-    async: true,
     cwd: app.files.workspaceRoot,
     encoding: 'utf8',
   };
 
-  const child = shell.exec(script, options, (error, stdout, stderr) => {
+  const child = exec(command.script, options, (error, stdout, stderr) => {
     if (error) {
-      socket.emit('failure', stderr);
+      socket.emit('failure', app.converter.toHtml(stderr));
     }
-  }) as ChildProcess;
+  });
 
   if (!child) {
     return socket.emit('success', successMessage);
   }
 
   socket.emit('start', child.pid);
-
-  child.stdout.on('data', data =>
-    socket.emit('progress', app.converter.toHtml(data)))
+  child.stderr.on('data', data => emitProgress(data, socket, app));
+  child.stdout.on('data', data => emitProgress(data, socket, app));
 
   child.on('exit', (code, signal) => {
     if (!code) {
@@ -94,10 +94,6 @@ export function execCommand(command: Command, socket: SocketIO.Socket, app: GUI)
     }
   });
 }
-
-// export async function initCommand(command: Command, socket: SocketIO.Socket, app: App) {
-//   socket.emit('failure', config);
-// }
 
 export function killCommand(command: Command, socket: SocketIO.Socket, app: GUI) {
   const name
@@ -129,7 +125,12 @@ export async function saveScript(command: Command, socket: SocketIO.Socket, app:
   const failureMessage = 'Save failed';
   app.logger(terminalMessage);
 
-  return await app.files.saveCommand(name, command.script)
+  const script
+    = command.description
+      ? `# ${ command.description } \n` + command.script
+      : command.script;
+
+  return await app.files.saveCommand(name, script)
     ? socket.emit('success', successMessage)
     : socket.emit('failure', failureMessage);
 }
@@ -152,7 +153,7 @@ export function generateCommand(command: Command, socket: SocketIO.Socket, app: 
 
       error: (error) => {
         app.logger(error.message);
-        socket.emit('failure', error.message);
+        socket.emit('failure', app.converter.toHtml(error.message));
       },
 
       complete: () =>
