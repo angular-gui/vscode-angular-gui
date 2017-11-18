@@ -1,9 +1,11 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
-# Version 0.3.1:
+# Version 0.3.2:
 
 * Fix: Module resolution for generate command
+* Feature: Add `angular-gui` schematics (*experimental*: there's no way to execute these schematics yet)
+* Add MIT licence
 
 # Version 0.3.0: Alpha release
 

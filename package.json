@@ -2,8 +2,9 @@
   "name": "angular-gui",
   "displayName": "GUI for Angular",
   "description": "Run Angular CLI from your browser",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "sasxa-net",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/angular-gui/vscode-angular-gui.git"
