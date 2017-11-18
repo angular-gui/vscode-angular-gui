@@ -1,0 +1,11 @@
+{
+  "name": "@schematics/angular-gui",
+  "version": "0.4.0",
+  "schematics": {
+    "express": {
+      "factory": "./express",
+      "schema": "./express/schema.json",
+      "description": "Configure express to serve from dist folder"
+    }
+  }
+}

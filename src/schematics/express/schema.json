@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "AngularGuiExpress",
+  "title": "AngularGUI Express Options Schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Specifies the name of the script.",
+      "default": "express"
+    }
+  }
+}
