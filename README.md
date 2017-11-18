@@ -53,7 +53,7 @@ will replace `prefix` option input from **text input** to **select box** for all
 ## Known Issues
 
 * Cannot change port for socket connection on client.
-* Module resolution for generate command isn't working. `--skip-import true` is set for all generate commands.
+* Generate `@nrwl/schematics:app` isn't working
 
 ## TODO:
 

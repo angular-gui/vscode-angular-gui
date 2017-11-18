@@ -1,106 +1,106 @@
 import { camelize, classify, normalize } from "@angular-devkit/core";
 
 import { FileSystemSchematicDesc } from "@angular-devkit/schematics/tools";
+import { findFiles } from "./helpers";
 import { join } from 'path';
 import { omitBy } from "./utils";
 
-function processInputs(schematic: FileSystemSchematicDesc, guiOptions = [], cliConfig) {
+function processInputs(schematic: FileSystemSchematicDesc, options, cliConfig) {
   const blueprint: any
     = schematic.schemaJson.properties;
 
   const defaults: any
     = Object.entries(blueprint)
-      .filter(([ name, option ]) => 'default' in option)
+      .filter(([ name, option ]) =>
+        'default' in option
+        && option.default !== '')
       .reduce((dict, [ name, option ]) => ({
         ...dict,
         [ name ]: option.default
       }), {});
 
-  const options
-    = guiOptions.reduce((dict, option) =>
-      ({ ...dict, [ camelize(option.name) ]: option.value }), {});
-
   const app
     = cliConfig.apps.find(a => a.name === options.app)
     || cliConfig.apps[ 0 ];
 
-  return { app, blueprint, defaults, options };
+  return { app, blueprint, defaults };
 }
 
-export function generateCommandPaths(schematic: FileSystemSchematicDesc, guiOptions = [], cliConfig) {
-  const { app, blueprint, defaults, options }
-    = processInputs(schematic, guiOptions, cliConfig);
+function getModule(filename, root, source, path = '') {
+  if (!filename) { return; }
+  const modulePath = findFiles(`**/${ filename }`, {
+    cwd: join(root, source, path)
+  })[ 0 ];
+
+  return path
+    ? modulePath
+    : join(source, modulePath);
+}
+
+export function generateCommandPaths(schematic: FileSystemSchematicDesc, options, cliConfig, rootDir) {
+  const { app, blueprint, defaults }
+    = processInputs(schematic, options, cliConfig);
 
   const sourceDir
     = !('sourceDir' in blueprint)
-      ? null
+      ? undefined
       : app.root;
 
   const path
     = !('path' in blueprint)
-      ? null
+      ? undefined
       : options.path || defaults.path;
-
-  const appRoot
-    = normalize(app.root).split('/').concat('').map(o => '..').join('/') + '/' + path;
 
   const module
     = !('module' in blueprint)
-      ? null
-      : appRoot + '/' + options.module;
+      ? undefined
+      : getModule(options.module, rootDir, sourceDir || app.root, path);
 
   const skipImport
     = !('skipImport' in blueprint)
-      ? null
+      ? undefined
       : options.module
-        ? !!options.skipImport
+        ? options.skipImport || defaults.skipImport
         : true;
 
   return omitBy({
-    // appRoot,
-    // module,
+    module,
     path,
-    skipImport: true,
+    skipImport,
     sourceDir,
-  }, o => o === null);
+  }, o => o === undefined);
 }
 
-export function generateCommandDefaults(schematic: FileSystemSchematicDesc, guiOptions = [], cliConfig) {
-  const { app, blueprint, defaults, options }
-    = processInputs(schematic, guiOptions, cliConfig);
+export function generateCommandDefaults(schematic: FileSystemSchematicDesc, options, cliConfig) {
+  const { app, blueprint, defaults }
+    = processInputs(schematic, options, cliConfig);
 
   const htmlTemplate
     = !('htmlTemplate' in blueprint)
-      ? null
+      ? undefined
       : `<!-- generated with angular-gui -->\n`
       + `<p>\n  ${ classify(options.name + '-' + schematic.name) } Works!\n</p>`;
 
   const styleext
     = !('styleext' in blueprint)
-      ? null
+      ? undefined
       : options.styleext
         ? options.styleext
         : cliConfig.defaults
           && cliConfig.defaults.styleExt
           ? cliConfig.defaults.styleExt
-          : null;
+          : undefined;
 
   return omitBy({
     ...defaults,
     htmlTemplate,
     styleext,
-  }, o => o === null);
+  }, o => o === undefined);
 }
 
-export function generateCommandValues(schematic: FileSystemSchematicDesc, guiOptions = [], cliConfig) {
+export function generateCommandValues(schematic: FileSystemSchematicDesc, options) {
   const blueprint: any
     = schematic.schemaJson.properties;
 
-  return guiOptions
-    .filter(option =>
-      camelize(option.name) in blueprint)
-    .reduce((dict, option) => ({
-      ...dict,
-      [ camelize(option.name) ]: option.value
-    }), {});
+  return omitBy(options, (_, key) => !(key in blueprint));
 }

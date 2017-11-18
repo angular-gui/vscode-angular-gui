@@ -4,21 +4,18 @@ import * as express from 'express';
 import * as io from 'socket.io';
 import * as stoppable from 'stoppable';
 
+import { processAction, processCommand } from './runner';
+
 import { Command } from './models';
 import { FilesManager } from './files';
 import { SchematicsManager } from './schematics';
 import { Server } from 'http';
 import { Subject } from 'rxjs/Subject';
-import { processCommand } from './runner';
 import { sort } from './utils';
-
-const VERSION = '0.3.0';
 
 export class AngularGUI {
   private app;
   action = new Subject();
-  cliConfig;
-  cliCollection;
   converter = new Converter();
   files: FilesManager;
   server;
@@ -28,7 +25,7 @@ export class AngularGUI {
   constructor(public config, public logger) {
     this.app = express().get('/', (req, res) => res.sendStatus(202));
     this.files = new FilesManager(config);
-    this.schematics = new SchematicsManager(config);
+    this.schematics = new SchematicsManager(this.files.workspaceRoot);
   }
 
   start(statusUpdate) {
@@ -39,13 +36,10 @@ export class AngularGUI {
     this.server.once('listening', () => statusUpdate('listening'));
 
     this.socket = io(this.server).on('connection', async socket => {
-      const cliConfig = this.cliConfig
-        = await this.files.cliConfig;
-        
-      const cliCollection = this.cliCollection
-        = this.cliConfig.defaults.schematics
-          ? this.cliConfig.defaults.schematics.collection
-          : '@schematics/angular';
+      const { config, collection } = await this.loadConfig();
+
+      this.schematics.collection = collection;
+      this.schematics.config = config;
 
       const clientConfig
         = this.config.local
@@ -66,10 +60,16 @@ export class AngularGUI {
         runner: await this.files.hasRunnerScript,
       };
 
-      socket.emit('init', { ...clientConfig, cliConfig, guiCommands, guiConfig, VERSION });
+      const VERSION
+        = (await this.files.packageJSON).version;
+
+      const configuration
+        = { ...clientConfig, cliConfig: config, guiCommands, guiConfig, VERSION };
+
+      socket.emit('init', configuration);
 
       socket.on('action', (command: Command) =>
-        this.action.next(command));
+        processAction(command, socket, this));
 
       socket.on('command', (command: Command) =>
         processCommand(command, socket, this));
@@ -78,7 +78,7 @@ export class AngularGUI {
         this.logger(`Client disconnected.`);
       });
     });
-    
+
     this.socket.on('connection', socket => {
       this.logger(`Client connected from ${ socket.handshake.headers.origin }.`);
       statusUpdate('connected');
@@ -104,21 +104,25 @@ export class AngularGUI {
    * or manually via extension command `extension.rebuildConfiguration`
    */
   async rebuild() {
+    const collection
+      = this.schematics.collection
+      || (await this.loadConfig()).collection;
 
     this.config.commandOptions.collection
-      = [ this.cliCollection, '@schematics/angular' ]
+      = [ collection, '@schematics/angular' ]
         .filter((v, i, a) => a.indexOf(v) === i);
 
     await this.files.copyCliSchematics(this.config.commandOptions.collection);
+    await this.files.copyGuiSchematics();
     await this.files.createRunnerScript();
 
     this.config.commandOptions.blueprint
-      = this.schematics.availableBlueprints(this.cliCollection)
+      = this.schematics.availableBlueprints(collection)
 
     const cliSchematics
       = this.config.commandOptions.blueprint
         .map(blueprint =>
-          this.schematics.blueprintCommand(this.cliCollection, blueprint))
+          this.schematics.blueprintCommand(collection, blueprint))
         .map(command => this.updateCommandOptions(command));
 
     const cliCommands
@@ -129,6 +133,15 @@ export class AngularGUI {
       cliCommands,
       cliSchematics,
     });
+  }
+
+  private async loadConfig() {
+    const config = await this.files.cliConfig;
+    const collection
+      = config.defaults.schematics
+        ? config.defaults.schematics.collection
+        : '@schematics/angular';
+    return { config, collection };
   }
 
   /**

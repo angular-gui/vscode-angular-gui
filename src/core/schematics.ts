@@ -10,10 +10,24 @@ import { join } from 'path';
 import { of } from 'rxjs/observable/of';
 
 export class SchematicsManager {
+  // private tree$;
   host = new NodeModulesEngineHost();
   engine = new SchematicEngine(this.host);
+  config;
+  collection;
 
-  constructor(public config) { }
+  constructor(private rootDir: string) {
+    this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => {
+      const transformed = {
+        ...generateCommandDefaults(schematic, options, this.config),
+        ...generateCommandValues(schematic, options),
+        ...generateCommandPaths(schematic, options, this.config, this.rootDir),
+      };
+
+      console.log(`registerOptionsTransform`, transformed);
+      return transformed;
+    });
+  }
 
   /**
    * List available schematics for the collection.
@@ -64,7 +78,7 @@ export class SchematicsManager {
     };
   }
 
-  generateBlueprint(command: Command, app: GUI) {
+  generateBlueprint(command: Command) {
     const options: any
       = (command.options || [])
         .reduce((dict, option) => ({
@@ -72,57 +86,26 @@ export class SchematicsManager {
           [ camelize(option.name) ]: option.value
         }), {});
 
-    const cliApp
-      = app.cliConfig.apps.find(a => a.name === options.app)
-      || app.cliConfig.apps[ 0 ];
-
     const blueprint
       = command.value.replace('ng generate', '').trim();
 
     const collection
       = options.collection
-      || app.cliCollection;
+      || this.collection;
 
     const engine: SchematicEngine<any, any> = this.engine;
     const _collection = engine.createCollection(collection);
     const schematic = _collection.createSchematic(blueprint);
 
-    const dryRunSink
-      = new DryRunSink(this.config.workspaceRoot, true);
-    const fsSink
-      = new FileSystemSink(this.config.workspaceRoot, true);
-    const fsHost
-      = new FileSystemHost(join(this.config.workspaceRoot, cliApp.root));
-    const tree$
-      = of(new FileSystemTree(fsHost))
-
-    /**
-     * this.host.registerOptionsTransform() is an observable with no teardown ???
-     * My workaround is not to use it and process options synchronously...
-     */
-
-    // this.host.registerOptionsTransform((schematic: any, options: {}) => {
-    //   const transformed = {
-    //     ...generateCommandDefaults(schematic.description, command.options, app.cliConfig),
-    //     ...generateCommandValues(schematic.description, command.options, app.cliConfig),
-    //     ...generateCommandPaths(schematic.description, command.options, app.cliConfig),
-    //   };
-
-    //   console.log(`registerOptionsTransform`, tree$);
-    //   return transformed;
-    // });
-
-    const transformedOptions = {
-      ...generateCommandDefaults(schematic.description, command.options, app.cliConfig),
-      ...generateCommandValues(schematic.description, command.options, app.cliConfig),
-      ...generateCommandPaths(schematic.description, command.options, app.cliConfig),
-    };
-    // console.log(transformedOptions);
-
     const loggingQueue: string[] = [];
     let error = false;
 
-    dryRunSink.reporter.subscribe((event: DryRunEvent) => {
+    const dryRunSink = new DryRunSink(this.rootDir, true);
+    const fsSink = new FileSystemSink(this.rootDir, true);
+    const fsHost = new FileSystemHost(this.rootDir);
+    const tree$ = of(new FileSystemTree(fsHost));
+
+    dryRunSink.reporter.forEach((event: DryRunEvent) => {
       switch (event.kind) {
         case 'error':
           const desc = event.description == 'alreadyExist' ? 'already exists' : 'does not exist.';
@@ -144,7 +127,7 @@ export class SchematicsManager {
       }
     });
 
-    return schematic.call(transformedOptions, tree$)
+    return schematic.call(options, tree$)
       .map((tree: Tree) => Tree.optimize(tree))
       .concatMap((tree: Tree) => {
         return dryRunSink
@@ -161,6 +144,8 @@ export class SchematicsManager {
             .ignoreElements()
             .concat(of(tree));
       })
-      .map(() => loggingQueue);
+      .map(() => loggingQueue.concat(options.dryRun
+        ? terminal.yellow('NOTE: Run with "dry run" no changes were made.')
+        : null).filter(o => !!o));
   }
 }

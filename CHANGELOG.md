@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
+# Version 0.3.1:
+
+* Fix: Module resolution for generate command
+
 # Version 0.3.0: Alpha release
 
 ## VSCode Extension

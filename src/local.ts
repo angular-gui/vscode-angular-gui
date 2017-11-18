@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as vscode from 'vscode';
 
 import { AngularGUI, defaultConfiguration as config } from './core';
 

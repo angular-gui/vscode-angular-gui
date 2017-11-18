@@ -23,6 +23,7 @@ export const defaultConfiguration = {
     ],
     collection: [
       '@schematics/angular',
+      '@schematics/angular-gui',
     ],
     styleext: [
       'scss',

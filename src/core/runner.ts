@@ -18,6 +18,16 @@ function emitProgress(data, socket: SocketIO.Socket, app: GUI) {
   }
 }
 
+export function processAction(command: Command, socket: SocketIO.Socket, app: GUI) {
+  switch (command.type) {
+    case 'open':
+      return app.action.next(command);
+
+    default:
+      return socket.emit('failure', 'Invalud action');
+  }
+}
+
 export function processCommand(command: Command, socket: SocketIO.Socket, app: GUI) {
   // console.log(JSON.stringify(command, null, 2));
   switch (command.type) {
@@ -143,7 +153,7 @@ export function generateCommand(command: Command, socket: SocketIO.Socket, app: 
   const failureMessage = '';
   app.logger(terminalMessage);
 
-  app.schematics.generateBlueprint(command, app)
+  app.schematics.generateBlueprint(command)
     .subscribe({
       next: loggingQueue =>
         loggingQueue.forEach(log => {

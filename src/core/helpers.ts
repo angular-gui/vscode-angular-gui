@@ -84,6 +84,10 @@ export async function readFiles(folder, pattern) {
   })))
 }
 
+export function findFiles(pattern: string, options?: glob.IOptions) {
+  return glob.sync(pattern, options);
+}
+
 export async function writeFile(filepath, data, backup = false): Promise<any> {
   const folder = await mkdirp(path.dirname(filepath));
   if (folder !== true) { return folder; }
