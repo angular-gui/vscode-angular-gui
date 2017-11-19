@@ -34,10 +34,12 @@ export async function readFilep(o) {
 }
 
 export async function rmdirp(o) {
-  return await existsp(o)
-    ? new Promise(res =>
-      fs.rmdir(path.resolve(o), (error) => res(error || true)))
-    : true;
+  const folder = path.resolve(o);
+  if (shell.test('-d', folder)) {
+    shell.mv(folder, folder + '_');
+    shell.rm('-rf', folder + '_');
+  }
+  return true;
 }
 
 export async function unlinkp(o) {
