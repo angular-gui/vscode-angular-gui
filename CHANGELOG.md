@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
+# Version 0.3.3:
+
+* Fix: Open files from client with partial path
+
 # Version 0.3.2:
 
 * Fix: Module resolution for generate command

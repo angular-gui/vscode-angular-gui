@@ -1,27 +1,61 @@
+import { CollectionCannotBeResolvedException, FileSystemEngineHost, FileSystemHost, FileSystemSchematicDesc, NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, SchematicEngine, Tree } from '@angular-devkit/schematics';
-import { FileSystemHost, FileSystemSchematicDesc, NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { camelize, dasherize, terminal } from '@angular-devkit/core';
 import { generateCommandDefaults, generateCommandPaths, generateCommandValues } from './options';
 import { omitBy, sort } from './utils';
 
 import { Command } from './models';
 import { GUI } from './gui.model';
+import { existsSync } from 'fs';
+import { sync as globSync } from 'glob';
 import { join } from 'path';
 import { of } from 'rxjs/observable/of';
 
-export class SchematicsManager {
-  // private tree$;
-  host = new NodeModulesEngineHost();
-  engine = new SchematicEngine(this.host);
-  config;
-  collection;
+export class GuiEngineHost extends FileSystemEngineHost {
+  constructor(protected _root: string) { super(_root); }
 
-  constructor(private rootDir: string) {
+  protected _resolveCollectionPath(name: string): string {
+    // Allow `${_root}/${name}.json` as a collection.
+    if (existsSync(join(this._root, name + '.json'))) {
+      return join(this._root, name + '.json');
+    }
+
+    // Allow `${_root}/${name}/collection.json.
+    if (existsSync(join(this._root, name, 'collection.json'))) {
+      return join(this._root, name, 'collection.json');
+    }
+
+    // Allow `${_root}/ ** /${name}/collection.json.
+    const collectionJsonPath = globSync(`${ name }/**/collection.json`, {
+      cwd: this._root
+    })[ 0 ];
+    if (collectionJsonPath) {
+      return join(this._root, collectionJsonPath);
+    }
+
+    throw new CollectionCannotBeResolvedException(name);
+  }
+}
+
+export class SchematicsManager {
+  private _blueprints;
+  config;
+  collections: string[];
+  engine;
+  host;
+  extensionFolder;
+  workspaceRoot;
+
+  initialize() {
+    if (this.host) { return; }
+
+    this.host = new GuiEngineHost(this.extensionFolder);
+    this.engine = new SchematicEngine(this.host);
     this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => {
       const transformed = {
         ...generateCommandDefaults(schematic, options, this.config),
         ...generateCommandValues(schematic, options),
-        ...generateCommandPaths(schematic, options, this.config, this.rootDir),
+        ...generateCommandPaths(schematic, options, this.config, this.workspaceRoot),
       };
 
       console.log(`registerOptionsTransform`, transformed);
@@ -40,16 +74,32 @@ export class SchematicsManager {
       .sort(sort('asc'));
   }
 
+
+  /**
+   * Available schematics for all collections.
+   */
+  get blueprints() {
+    return this._blueprints
+      ? this._blueprints
+      : this._blueprints = this.collections
+        .map(collection => this.engine.createCollection(collection))
+        .map(collection =>
+          this.host.listSchematics(collection)
+            .map(blueprint =>
+              ({ [ blueprint ]: collection.description.name })))
+        .reduce((acc, list) => [ ...acc, ...list ], [])
+        .reduce((acc, list) => ({ ...list, ...acc }), {});
+  }
+
   /**
    * Normalize schematic to CLI Command interface
    *
-   * @param collection Name of the collection
    * @param blueprint Name of the blueprint
    *
    */
-  blueprintCommand(collection: string, blueprint: string) {
+  blueprintCommand(blueprint: string) {
     const engine: SchematicEngine<any, any> = this.engine;
-    const _collection = engine.createCollection(collection);
+    const _collection = engine.createCollection(this.blueprints[ blueprint ]);
     const extended = _collection.description.schematics[ blueprint ].extends;
     let schematic = _collection.createSchematic(blueprint);
 
@@ -91,7 +141,7 @@ export class SchematicsManager {
 
     const collection
       = options.collection
-      || this.collection;
+      || this.collections[ 0 ];
 
     const engine: SchematicEngine<any, any> = this.engine;
     const _collection = engine.createCollection(collection);
@@ -100,9 +150,9 @@ export class SchematicsManager {
     const loggingQueue: string[] = [];
     let error = false;
 
-    const dryRunSink = new DryRunSink(this.rootDir, true);
-    const fsSink = new FileSystemSink(this.rootDir, true);
-    const fsHost = new FileSystemHost(this.rootDir);
+    const dryRunSink = new DryRunSink(this.workspaceRoot, true);
+    const fsSink = new FileSystemSink(this.workspaceRoot, true);
+    const fsHost = new FileSystemHost(this.workspaceRoot);
     const tree$ = of(new FileSystemTree(fsHost));
 
     dryRunSink.reporter.forEach((event: DryRunEvent) => {

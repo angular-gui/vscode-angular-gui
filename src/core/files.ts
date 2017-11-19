@@ -2,11 +2,14 @@ import * as helpers from './helpers';
 
 import { basename, join } from 'path';
 
+import { sync as globSync } from 'glob';
+import { uniqueFn } from './utils';
+
 /**
  * Exposes file system commands for specific files
  */
 export class FilesManager {
-  clientConfigFolder;
+  extensionFolder;
   commandsFolder;
   extensionRoot;
   workspaceFolder;
@@ -17,38 +20,50 @@ export class FilesManager {
     this.workspaceFolder = join(config.workspaceRoot, config.rootDir);
     this.commandsFolder = join(this.workspaceFolder, 'commands');
     this.extensionRoot = config.extensionRoot;
-    this.clientConfigFolder = join(config.extensionRoot, basename(this.workspaceRoot));
+    this.extensionFolder = join(config.extensionRoot, basename(this.workspaceRoot));
   }
 
   /**
    * Copy installed project schematics
-   * from workspace to extension "node_modules"
-   * to be able to run schematics with "NodeModulesEngineHost"
-   *
-   * NOTE: Cannot use "FileSystemEngineHost" because it cannot
-   * resolve `collection.json` properly, for example:
-   *
-   *   @nrwl/schematics/  src  /collection.json
+   * from workspace "node_modules" to extension folder
+   * to be able to handle multiple workspaces
    */
-  copyCliSchematics(collections: string[]) {
+  copySchematics(collections: string[]) {
     const copied = collections
-      .concat('@schematics/angular')
-      .filter((v, i, a) => a.indexOf(v) === i)
+      .filter(uniqueFn)
+      .filter(collection => collection !== '@schematics/angular-gui')
       .map(name => {
         const folderFrom = join(this.workspaceRoot, 'node_modules', name, '*');
-        const offsetLocal = this.config.local ? '..' : '';
-        const folderTo = join(this.extensionRoot, offsetLocal, 'node_modules', name);
+        const folderTo = join(this.extensionFolder, name);
         return helpers.copyFolder(folderFrom, folderTo);
       });
+
+    const folderFrom = this.config.local // DEV ONLY
+      ? [
+        join(this.extensionRoot, '..', 'schematics', '*'),
+        join(this.extensionRoot, '..', 'src', 'schematics', '*') ]
+      : join(this.extensionRoot, 'schematics', '*');
+    const folderTo = join(this.extensionFolder, '@schematics', 'angular-gui');
+    copied.push(helpers.copyFolder(folderFrom, folderTo));
 
     return Promise.all(copied);
   }
 
-  copyGuiSchematics() {
-    const offsetLocal = this.config.local ? '..' : '';
-    const folderFrom = join(this.extensionRoot, offsetLocal, 'schematics', '*');
-    const folderTo = join(this.extensionRoot, offsetLocal, 'node_modules', '@schematics', 'angular-gui');
-    return helpers.copyFolder(folderFrom, folderTo);
+  /**
+   * https://github.com/angular/devkit/issues/285
+   */
+  fixCollectionNames(collections: string[]) {
+    const fixed = collections
+      .filter(uniqueFn)
+      .map(name => {
+        return globSync(`${ name }/**/collection.json`, { cwd: this.extensionFolder })[ 0 ]
+      })
+      .map(collection => join(this.extensionFolder, collection))
+      .map((collection, index) =>
+        helpers.updateJson(collection, data => ({
+          ...data, name: collections[ index ]
+        })));
+    return Promise.all(fixed);
   }
 
   createRunnerScript() {
@@ -58,27 +73,28 @@ export class FilesManager {
     return helpers.writeFile(filename, script)
       .then(() => helpers.updateJson<any>(packagePath, data => {
         const alias = this.config.npmRunner;
-        const shouldUpdate
+        const shouldUpdatePackageJson
           = !data.scripts
           || !(alias in data.scripts)
           || data.scripts[ alias ].includes('.runner.sh');
 
-        if (shouldUpdate) {
+        if (shouldUpdatePackageJson) {
           const command = `sh ${ this.config.rootDir }/.runner.sh`;
           const scripts = { [ alias ]: command, ...data.scripts };
           return { ...data, scripts };
+        } else {
+          return data;
         }
       }));
   }
 
   saveClientConfig(data) {
-    const filename = join(this.clientConfigFolder, '.angular-gui.json');
+    const filename = join(this.extensionFolder, '.angular-gui.json');
     return helpers.writeFile(filename, data);
   }
 
   deleteClientConfig() {
-    const filename = join(this.clientConfigFolder, '.angular-gui.json');
-    return helpers.unlinkp(filename);
+    return helpers.rmdirp(this.extensionFolder);
   }
 
   saveCommand(name, data) {
@@ -102,7 +118,7 @@ export class FilesManager {
   }
 
   get clientConfig() {
-    const filename = join(this.clientConfigFolder, '.angular-gui.json');
+    const filename = join(this.extensionFolder, '.angular-gui.json');
     return helpers.readFile(filename);
   }
 
@@ -111,7 +127,7 @@ export class FilesManager {
   }
 
   get packageJSON() {
-    const offsetLocal = this.config.local ? '..' : '';
+    const offsetLocal = this.config.local ? '..' : ''; // DEV ONLY
     const filename = join(this.extensionRoot, offsetLocal, 'package.json');
     return helpers.readFile(filename);
   }

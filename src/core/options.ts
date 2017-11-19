@@ -81,6 +81,11 @@ export function generateCommandDefaults(schematic: FileSystemSchematicDesc, opti
       : `<!-- generated with angular-gui -->\n`
       + `<p>\n  ${ classify(options.name + '-' + schematic.name) } Works!\n</p>`;
 
+  const viewEncapsulation
+    = !('viewEncapsulation' in blueprint)
+      ? undefined
+      : options.viewEncapsulation || defaults.viewEncapsulation || 'Emulated';
+
   const styleext
     = !('styleext' in blueprint)
       ? undefined

@@ -5,13 +5,13 @@ import * as io from 'socket.io';
 import * as stoppable from 'stoppable';
 
 import { processAction, processCommand } from './runner';
+import { sort, uniqueFn } from './utils';
 
 import { Command } from './models';
 import { FilesManager } from './files';
 import { SchematicsManager } from './schematics';
 import { Server } from 'http';
 import { Subject } from 'rxjs/Subject';
-import { sort } from './utils';
 
 export class AngularGUI {
   private app;
@@ -25,7 +25,6 @@ export class AngularGUI {
   constructor(public config, public logger) {
     this.app = express().get('/', (req, res) => res.sendStatus(202));
     this.files = new FilesManager(config);
-    this.schematics = new SchematicsManager(this.files.workspaceRoot);
   }
 
   start(statusUpdate) {
@@ -36,10 +35,7 @@ export class AngularGUI {
     this.server.once('listening', () => statusUpdate('listening'));
 
     this.socket = io(this.server).on('connection', async socket => {
-      const { config, collection } = await this.loadConfig();
-
-      this.schematics.collection = collection;
-      this.schematics.config = config;
+      const { config, collections } = await this.loadConfig();
 
       const clientConfig
         = this.config.local
@@ -51,6 +47,10 @@ export class AngularGUI {
           : await this.files.clientConfig
           || await this.rebuild()
             .then(() => this.files.clientConfig)
+
+      if (!this.schematics) {
+        this.initializeSchematics(config, collections);
+      }
 
       const guiCommands
         = await this.files.guiCommands;
@@ -104,44 +104,59 @@ export class AngularGUI {
    * or manually via extension command `extension.rebuildConfiguration`
    */
   async rebuild() {
-    const collection
-      = this.schematics.collection
-      || (await this.loadConfig()).collection;
+    this.logger('Rebuilding Schematics and updating Client Configuration...');
+
+    const { config, collections } = await this.loadConfig();
+
+    await this.files.copySchematics(collections)
+      .then(() => this.files.fixCollectionNames(collections))
+      .then(() => this.files.createRunnerScript())
+      .then(() => this.initializeSchematics(config, collections));
 
     this.config.commandOptions.collection
-      = [ collection, '@schematics/angular' ]
-        .filter((v, i, a) => a.indexOf(v) === i);
-
-    await this.files.copyCliSchematics(this.config.commandOptions.collection);
-    await this.files.copyGuiSchematics();
-    await this.files.createRunnerScript();
+      = collections;
 
     this.config.commandOptions.blueprint
-      = this.schematics.availableBlueprints(collection)
+      = Object.keys(this.schematics.blueprints);
+
+    console.log(this.schematics.blueprints);
 
     const cliSchematics
       = this.config.commandOptions.blueprint
         .map(blueprint =>
-          this.schematics.blueprintCommand(collection, blueprint))
+          this.schematics.blueprintCommand(blueprint))
         .map(command => this.updateCommandOptions(command));
 
     const cliCommands
       = Object.values(commands)
         .map(command => this.updateCommandOptions(command));
 
-    return this.files.saveClientConfig({
-      cliCommands,
-      cliSchematics,
-    });
+    return this.files
+      .saveClientConfig({ cliCommands, cliSchematics, })
+      .then(data => { this.logger('Rebuilding complete.'); return data; })
+  }
+
+  private initializeSchematics(config, collections) {
+    this.schematics = new SchematicsManager();
+    this.schematics.collections = collections;
+    this.schematics.config = config;
+    this.schematics.workspaceRoot = this.files.workspaceRoot;
+    this.schematics.extensionFolder = this.files.extensionFolder;
+    this.schematics.initialize();
   }
 
   private async loadConfig() {
     const config = await this.files.cliConfig;
-    const collection
+    const defaultCollection
       = config.defaults.schematics
         ? config.defaults.schematics.collection
         : '@schematics/angular';
-    return { config, collection };
+
+    const collections
+      = [ defaultCollection, ...this.config.commandOptions.collection ]
+        .concat('@schematics/angular-gui')
+        .filter(uniqueFn);
+    return { config, collections };
   }
 
   /**
@@ -174,4 +189,3 @@ export class AngularGUI {
     return { ...command, availableOptions };
   }
 }
-//
