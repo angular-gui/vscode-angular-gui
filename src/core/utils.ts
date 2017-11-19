@@ -30,3 +30,7 @@ export function omitBy<T>(source: T, filter: (o: T, ...rest) => boolean): T {
     .reduce((dict, [ key, value ]) =>
       ({ ...dict, [ key ]: value }), {} as any);
 }
+
+export function uniqueFn<T>(value: T, index: number, array: T[]) {
+  return value && array.indexOf(value) === index;
+}
