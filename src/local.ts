@@ -1,6 +1,7 @@
 import * as path from 'path';
 
-import { AngularGUI, defaultConfiguration as config } from './core';
+import { AngularGUI } from './core/app';
+import { defaultConfiguration as config } from './core/config';
 
 /**
  * If you are working on extension code and want to run local.ts

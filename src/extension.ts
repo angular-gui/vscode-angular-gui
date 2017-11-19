@@ -3,10 +3,13 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 
-import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { AngularGUI, defaultConfiguration } from './core';
+import { join, resolve } from 'path';
+
+import { AngularGUI } from './core/app';
+import { defaultConfiguration } from './core/config';
+import { normalize } from "@angular-devkit/core";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
   try {
     const rootUri = vscode.workspace.workspaceFolders[ 0 ];
     config[ 'workspaceRoot' ] = rootUri.uri.fsPath;
-    config[ 'extensionRoot' ] = path.resolve(__dirname, '..');
+    config[ 'extensionRoot' ] = resolve(__dirname, '..');
   } catch  {
     return vscode.window.showErrorMessage('FATAL ERROR: Cannot access workspace.');
   }
@@ -46,16 +49,21 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  function openDocumnent(path) {
+    const fullPath
+      = normalize(path).startsWith(normalize(config[ 'workspaceRoot' ]))
+        ? path
+        : normalize(join(config[ 'workspaceRoot' ], path));
+
+    vscode.workspace
+      .openTextDocument(fullPath)
+      .then(doc => vscode.window.showTextDocument(doc))
+  }
+
   function processAction(action) {
     switch (action.type) {
       case 'open':
-        vscode.workspace
-          .openTextDocument(action.payload)
-          .then(doc => vscode.window.showTextDocument(doc))
-        break;
-
-      default:
-        break;
+        return openDocumnent(action.payload);
     }
   }
 
