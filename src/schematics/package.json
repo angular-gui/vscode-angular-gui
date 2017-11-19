@@ -1,6 +1,6 @@
 {
   "name": "@schematics/angular-gui",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Schematics specific to GUI for Angular",
   "schematics": "./collection.json"
 }

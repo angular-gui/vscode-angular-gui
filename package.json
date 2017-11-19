@@ -2,7 +2,7 @@
   "name": "angular-gui",
   "displayName": "GUI for Angular",
   "description": "Run Angular CLI from your browser",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publisher": "sasxa-net",
   "license": "MIT",
   "repository": {
@@ -94,8 +94,9 @@
     }
   },
   "scripts": {
-    "dev": "sh dev.sh",
+    "build": "sh prod.sh",
     "compile": "tsc -p ./",
+    "dev": "sh dev.sh",
     "debug": "webpack",
     "package": "vsce package",
     "postinstall": "node ./node_modules/vscode/bin/install",
