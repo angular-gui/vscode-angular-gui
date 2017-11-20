@@ -38,11 +38,10 @@ export class FilesManager {
         return helpers.copyFolder(folderFrom, folderTo);
       });
 
-    const folderFrom = this.config.local // DEV ONLY
-      ? [
-        join(this.extensionRoot, '..', 'schematics', '*'),
-        join(this.extensionRoot, '..', 'src', 'schematics', '*') ]
-      : join(this.extensionRoot, 'schematics', '*');
+    const folderFrom
+      = this.config.local
+        ? join(this.extensionRoot, '..', 'schematics', '*') // DEV ONLY
+        : join(this.extensionRoot, 'schematics', '*');
     const folderTo = join(this.extensionFolder, '@schematics', 'angular-gui');
     copied.push(helpers.copyFolder(folderFrom, folderTo));
 
@@ -127,8 +126,10 @@ export class FilesManager {
   }
 
   get packageJSON() {
-    const offsetLocal = this.config.local ? '..' : ''; // DEV ONLY
-    const filename = join(this.extensionRoot, offsetLocal, 'package.json');
+    const filename
+      = this.config.local
+        ? join(this.extensionRoot, '..', 'package.json') // DEV ONLY
+        : join(this.extensionRoot, 'package.json');
     return helpers.readFile(filename);
   }
 }
