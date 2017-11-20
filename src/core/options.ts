@@ -43,22 +43,22 @@ export function generateCommandPaths(schematic: FileSystemSchematicDesc, options
 
   const sourceDir
     = !('sourceDir' in blueprint)
-      ? undefined
+      ? null
       : app.root;
 
   const path
     = !('path' in blueprint)
-      ? undefined
+      ? null
       : options.path || defaults.path;
 
   const module
     = !('module' in blueprint)
-      ? undefined
+      ? null
       : getModule(options.module, rootDir, sourceDir || app.root, path);
 
   const skipImport
     = !('skipImport' in blueprint)
-      ? undefined
+      ? null
       : options.module
         ? options.skipImport || defaults.skipImport
         : true;
@@ -68,7 +68,7 @@ export function generateCommandPaths(schematic: FileSystemSchematicDesc, options
     path,
     skipImport,
     sourceDir,
-  }, o => o === undefined);
+  }, o => o === null);
 }
 
 export function generateCommandDefaults(schematic: FileSystemSchematicDesc, options, cliConfig) {
@@ -77,30 +77,31 @@ export function generateCommandDefaults(schematic: FileSystemSchematicDesc, opti
 
   const htmlTemplate
     = !('htmlTemplate' in blueprint)
-      ? undefined
+      ? null
       : `<!-- generated with angular-gui -->\n`
       + `<p>\n  ${ classify(options.name + '-' + schematic.name) } Works!\n</p>`;
 
   const viewEncapsulation
     = !('viewEncapsulation' in blueprint)
-      ? undefined
-      : options.viewEncapsulation || defaults.viewEncapsulation || 'Emulated';
+      ? null
+      : options.viewEncapsulation || defaults.viewEncapsulation;
 
   const styleext
     = !('styleext' in blueprint)
-      ? undefined
+      ? null
       : options.styleext
         ? options.styleext
         : cliConfig.defaults
           && cliConfig.defaults.styleExt
           ? cliConfig.defaults.styleExt
-          : undefined;
+          : null;
 
   return omitBy({
     ...defaults,
     htmlTemplate,
     styleext,
-  }, o => o === undefined);
+    viewEncapsulation,
+  }, o => o === null);
 }
 
 export function generateCommandValues(schematic: FileSystemSchematicDesc, options) {
