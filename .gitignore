@@ -5,3 +5,4 @@ node_modules
 .angular-gui.json
 .angular-gui
 *.vsix
+schematics
