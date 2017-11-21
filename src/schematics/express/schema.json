@@ -6,8 +6,23 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Specifies the name of the script.",
-      "default": "express"
+      "description": "Specifies the name for the command script.",
+      "default": "serve.dist"
+    },
+    "npmInstall": {
+      "type": "boolean",
+      "description": "Install npm dependencies",
+      "default": true
+    },
+    "port": {
+      "type": "number",
+      "description": "Specifies the port for express server.",
+      "default": "4200"
+    },
+    "rootDir": {
+      "type": "string",
+      "description": "Specifies the folder for the script.",
+      "default": ".angular-gui"
     }
   }
 }
