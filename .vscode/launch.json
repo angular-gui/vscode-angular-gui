@@ -10,7 +10,8 @@
             "program": "${workspaceFolder}/out/local.js",
             "restart": true,
             "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "preLaunchTask": "npm: build:schematics"
         },
         {
             "name": "Launch Extension",

@@ -1,19 +1,19 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
-        "outDir": ".",
-        "lib": [
-            "es2017"
-        ],
-        "sourceMap": true,
-        "rootDir": "src"
-    },
-    "include": [
-        "src/schematics"
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "outDir": ".",
+    "inlineSourceMap": true,
+    "lib": [
+      "es2017"
     ],
-    "exclude": [
-        "node_modules",
-        ".vscode-test"
-    ]
+    "rootDir": "src"
+  },
+  "include": [
+    "src/schematics"
+  ],
+  "exclude": [
+    "node_modules",
+    ".vscode-test"
+  ]
 }
