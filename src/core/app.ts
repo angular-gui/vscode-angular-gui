@@ -4,10 +4,10 @@ import * as express from 'express';
 import * as io from 'socket.io';
 import * as stoppable from 'stoppable';
 
-import { processAction, processCommand } from './runner';
 import { sort, uniqueFn } from './utils';
 
-import { Command } from './models';
+import { Command } from './command.interface';
+import { CommandRunner } from './runner';
 import { FilesManager } from './files';
 import { SchematicsManager } from './schematics';
 import { Server } from 'http';
@@ -16,8 +16,6 @@ import { Subject } from 'rxjs/Subject';
 export class AngularGUI {
   private app;
   action = new Subject();
-  cliConfig;
-  converter = new Converter();
   files: FilesManager;
   server;
   schematics: SchematicsManager;
@@ -39,11 +37,13 @@ export class AngularGUI {
     this.socket = io(this.server).on('connection', async socket => {
       socket.emit('init', await this.clientConfig());
 
+      const runner = new CommandRunner(this, socket);
+
       socket.on('action', (command: Command) =>
-        processAction(command, socket, this));
+        runner.processAction(command));
 
       socket.on('command', (command: Command) =>
-        processCommand(command, socket, this));
+        runner.processCommand(command));
 
       socket.on('disconnect', socket => {
         this.logger(`Client disconnected.`);
@@ -77,7 +77,6 @@ export class AngularGUI {
   async rebuild() {
     this.logger('Rebuilding Schematics and updating Client Configuration...');
 
-    const config = this.cliConfig;
     const collections = this.config.commandOptions.collection;
 
     await this.files.copySchematics(collections)
@@ -107,13 +106,12 @@ export class AngularGUI {
   }
 
   private async initializeSchematics() {
-    const config
-      = this.cliConfig
+    const cliConfig
       = await this.files.cliConfig;
 
     const defaultCollection
-      = config.defaults.schematics
-        ? config.defaults.schematics.collection
+      = cliConfig.defaults.schematics
+        ? cliConfig.defaults.schematics.collection
         : '@schematics/angular';
 
     this.config.commandOptions.collection
@@ -123,13 +121,16 @@ export class AngularGUI {
 
     this.schematics
       = new SchematicsManager(
-        this.cliConfig,
+        cliConfig,
         this.config.commandOptions.collection,
         this.files.workspaceRoot,
         this.files.extensionFolder);
   }
 
   private async clientConfig() {
+    const cliConfig
+      = await this.files.cliConfig;
+
     const clientConfig
       = await this.files.clientConfig
       || await this.rebuild()
@@ -150,7 +151,7 @@ export class AngularGUI {
     const VERSION
       = (await this.files.packageJSON).version;
 
-    return { ...clientConfig, cliConfig: this.cliConfig, guiCommands, guiConfig, VERSION };
+    return { ...clientConfig, cliConfig, guiCommands, guiConfig, VERSION };
   }
 
   /**

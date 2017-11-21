@@ -4,8 +4,7 @@ import { camelize, dasherize, terminal } from '@angular-devkit/core';
 import { generateCommandDefaults, generateCommandPaths, generateCommandValues } from './options';
 import { omitBy, sort } from './utils';
 
-import { Command } from './models';
-import { GUI } from './gui.model';
+import { Command } from './command.interface';
 import { existsSync } from 'fs';
 import { sync as globSync } from 'glob';
 import { join } from 'path';
