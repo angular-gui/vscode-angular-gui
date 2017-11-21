@@ -16,6 +16,7 @@ import { Subject } from 'rxjs/Subject';
 export class AngularGUI {
   private app;
   action = new Subject();
+  cliConfig;
   converter = new Converter();
   files: FilesManager;
   server;
@@ -25,6 +26,7 @@ export class AngularGUI {
   constructor(public config, public logger) {
     this.app = express().get('/', (req, res) => res.sendStatus(202));
     this.files = new FilesManager(config);
+    this.initializeSchematics();
   }
 
   start(statusUpdate) {
@@ -35,38 +37,7 @@ export class AngularGUI {
     this.server.once('listening', () => statusUpdate('listening'));
 
     this.socket = io(this.server).on('connection', async socket => {
-      const { config, collections } = await this.loadConfig();
-
-      const clientConfig
-        = this.config.local
-          // DEV ONLY: rebuild clientConfig when not running from extension
-          ? await this.files.deleteClientConfig()
-            .then(() => this.rebuild())
-            .then(() => this.files.clientConfig)
-
-          : await this.files.clientConfig
-          || await this.rebuild()
-            .then(() => this.files.clientConfig)
-
-      if (!this.schematics) {
-        this.initializeSchematics(config, collections);
-      }
-
-      const guiCommands
-        = await this.files.guiCommands;
-
-      const guiConfig = {
-        ...this.config,
-        runner: await this.files.hasRunnerScript,
-      };
-
-      const VERSION
-        = (await this.files.packageJSON).version;
-
-      const configuration
-        = { ...clientConfig, cliConfig: config, guiCommands, guiConfig, VERSION };
-
-      socket.emit('init', configuration);
+      socket.emit('init', await this.clientConfig());
 
       socket.on('action', (command: Command) =>
         processAction(command, socket, this));
@@ -106,20 +77,16 @@ export class AngularGUI {
   async rebuild() {
     this.logger('Rebuilding Schematics and updating Client Configuration...');
 
-    const { config, collections } = await this.loadConfig();
+    const config = this.cliConfig;
+    const collections = this.config.commandOptions.collection;
 
     await this.files.copySchematics(collections)
       .then(() => this.files.fixCollectionNames(collections))
-      .then(() => this.files.createRunnerScript())
-      .then(() => this.initializeSchematics(config, collections));
-
-    this.config.commandOptions.collection
-      = collections;
+      .then(() => this.files.createRunnerScript());
 
     this.config.commandOptions.blueprint
-      = Object.keys(this.schematics.blueprints);
-
-    console.log(this.schematics.blueprints);
+      = Object.keys(this.schematics.blueprints)
+        .sort(sort('asc'))
 
     const cliSchematics
       = this.config.commandOptions.blueprint
@@ -133,30 +100,57 @@ export class AngularGUI {
 
     return this.files
       .saveClientConfig({ cliCommands, cliSchematics, })
-      .then(data => { this.logger('Rebuilding complete.'); return data; })
+      .then(async data => {
+        this.logger('Rebuilding complete.');
+        this.socket.emit('init', await this.clientConfig());
+      })
   }
 
-  private initializeSchematics(config, collections) {
-    this.schematics = new SchematicsManager();
-    this.schematics.collections = collections;
-    this.schematics.config = config;
-    this.schematics.workspaceRoot = this.files.workspaceRoot;
-    this.schematics.extensionFolder = this.files.extensionFolder;
-    this.schematics.initialize();
-  }
+  private async initializeSchematics() {
+    const config
+      = this.cliConfig
+      = await this.files.cliConfig;
 
-  private async loadConfig() {
-    const config = await this.files.cliConfig;
     const defaultCollection
       = config.defaults.schematics
         ? config.defaults.schematics.collection
         : '@schematics/angular';
 
-    const collections
+    this.config.commandOptions.collection
       = [ defaultCollection, ...this.config.commandOptions.collection ]
         .concat('@schematics/angular-gui')
         .filter(uniqueFn);
-    return { config, collections };
+
+    this.schematics
+      = new SchematicsManager(
+        this.cliConfig,
+        this.config.commandOptions.collection,
+        this.files.workspaceRoot,
+        this.files.extensionFolder);
+  }
+
+  private async clientConfig() {
+    const clientConfig
+      = await this.files.clientConfig
+      || await this.rebuild()
+        .then(() => this.files.clientConfig)
+
+    this.config.commandOptions.blueprint
+      = Object.keys(this.schematics.blueprints)
+        .sort(sort('asc'))
+
+    const guiCommands
+      = await this.files.guiCommands;
+
+    const guiConfig = {
+      ...this.config,
+      runner: await this.files.hasRunnerScript,
+    };
+
+    const VERSION
+      = (await this.files.packageJSON).version;
+
+    return { ...clientConfig, cliConfig: this.cliConfig, guiCommands, guiConfig, VERSION };
   }
 
   /**

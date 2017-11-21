@@ -93,8 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
     .registerCommand('extension.rebuildConfiguration', () =>
       vscode.window.showInformationMessage('Rebuilding Schematics and updating Client Configuration.')
         .then(() => gui.rebuild())
-        .then(() => vscode.window.showInformationMessage('Rebuilding complete.'))
-        .then(() => gui.socket.emit('reload')));
+        .then(() => vscode.window.showInformationMessage('Rebuilding complete.')));
 
   context.subscriptions.push(offline, online, rebuild, status);
 }

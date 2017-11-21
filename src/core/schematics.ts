@@ -1,5 +1,5 @@
+import { Collection, DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, SchematicEngine, Tree } from '@angular-devkit/schematics';
 import { CollectionCannotBeResolvedException, FileSystemEngineHost, FileSystemHost, FileSystemSchematicDesc, NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
-import { DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, SchematicEngine, Tree } from '@angular-devkit/schematics';
 import { camelize, dasherize, terminal } from '@angular-devkit/core';
 import { generateCommandDefaults, generateCommandPaths, generateCommandValues } from './options';
 import { omitBy, sort } from './utils';
@@ -39,41 +39,23 @@ export class GuiEngineHost extends FileSystemEngineHost {
 
 export class SchematicsManager {
   private _blueprints;
-  config;
-  collections: string[];
   engine;
   host;
-  extensionFolder;
-  workspaceRoot;
 
-  initialize() {
-    if (this.host) { return; }
+  constructor(
+    private cliConfig,
+    private collections: string[],
+    private workspaceRoot: string,
+    private extensionFolder: string) {
 
     this.host = new GuiEngineHost(this.extensionFolder);
     this.engine = new SchematicEngine(this.host);
-    this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => {
-      const transformed = {
-        ...generateCommandDefaults(schematic, options, this.config),
-        ...generateCommandValues(schematic, options),
-        ...generateCommandPaths(schematic, options, this.config, this.workspaceRoot),
-      };
-
-      console.log(`registerOptionsTransform`, transformed);
-      return transformed;
-    });
+    this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => ({
+      ...generateCommandDefaults(schematic, options, this.cliConfig),
+      ...generateCommandValues(schematic, options),
+      ...generateCommandPaths(schematic, options, this.cliConfig, this.workspaceRoot),
+    }));
   }
-
-  /**
-   * List available schematics for the collection.
-   *
-   * @param collection Name of the collection
-   */
-  availableBlueprints(collection: string) {
-    const _collection = this.engine.createCollection(collection);
-    return this.host.listSchematics(_collection)
-      .sort(sort('asc'));
-  }
-
 
   /**
    * Available schematics for all collections.
@@ -99,16 +81,16 @@ export class SchematicsManager {
    */
   blueprintCommand(blueprint: string) {
     const engine: SchematicEngine<any, any> = this.engine;
-    const _collection = engine.createCollection(this.blueprints[ blueprint ]);
-    const extended = _collection.description.schematics[ blueprint ].extends;
-    let schematic = _collection.createSchematic(blueprint);
+    const collection = engine.createCollection(this.blueprints[ blueprint ]);
+    const extended = collection.description.schematics[ blueprint ].extends;
+    let schematic = collection.createSchematic(blueprint);
 
     if (extended) {
-      const _collection = engine.createCollection(extended.split(':')[ 0 ]);
-      schematic = _collection.createSchematic(blueprint);
+      const collection = engine.createCollection(extended.split(':')[ 0 ]);
+      schematic = collection.createSchematic(blueprint);
     }
 
-    const { aliases, description, name, schemaJson } = schematic.description
+    const { aliases, description, name, schemaJson } = schematic.description;
 
     return {
       aliases, description, name,
@@ -117,10 +99,14 @@ export class SchematicsManager {
         .map(([ name, options ]) => {
           return {
             name: dasherize(name),
-            aliases: [ options.alias ],
+            aliases: options.alias
+              ? [ options.alias ]
+              : [],
             default: options.default,
             description: options.description,
-            required: schemaJson.required.includes(name),
+            required: schemaJson.required
+              ? schemaJson.required.includes(name)
+              : false,
             type: options.type,
             values: options.enum
           }
@@ -129,23 +115,12 @@ export class SchematicsManager {
   }
 
   generateBlueprint(command: Command) {
-    const options: any
-      = (command.options || [])
-        .reduce((dict, option) => ({
-          ...dict,
-          [ camelize(option.name) ]: option.value
-        }), {});
-
     const blueprint
       = command.value.replace('ng generate', '').trim();
-
     const collection
-      = options.collection
-      || this.collections[ 0 ];
-
-    const engine: SchematicEngine<any, any> = this.engine;
-    const _collection = engine.createCollection(collection);
-    const schematic = _collection.createSchematic(blueprint);
+      = this.engine.createCollection(this.blueprints[ blueprint ]) as Collection<any, any>;
+    const schematic
+      = collection.createSchematic(blueprint);
 
     const loggingQueue: string[] = [];
     let error = false;
@@ -177,6 +152,13 @@ export class SchematicsManager {
       }
     });
 
+    const options: any
+      = (command.options || [])
+        .reduce((dict, option) => ({
+          ...dict,
+          [ camelize(option.name) ]: option.value
+        }), {});
+
     return schematic.call(options, tree$)
       .map((tree: Tree) => Tree.optimize(tree))
       .concatMap((tree: Tree) => {
@@ -194,8 +176,11 @@ export class SchematicsManager {
             .ignoreElements()
             .concat(of(tree));
       })
-      .map(() => loggingQueue.concat(options.dryRun
-        ? terminal.yellow('NOTE: Run with "dry run" no changes were made.')
-        : null).filter(o => !!o));
+      .map(() =>
+        loggingQueue
+          .concat(options.dryRun
+            ? terminal.yellow('NOTE: Run with "dry run" no changes were made.')
+            : null)
+          .filter(o => !!o));
   }
 }
