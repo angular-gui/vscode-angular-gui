@@ -1,5 +1,5 @@
 import { classify, omitBy } from './utils';
-import { globSync, join } from './helpers';
+import { globSync, join, normalize } from './helpers';
 
 import { FileSystemSchematicDesc } from "@angular-devkit/schematics/tools";
 
@@ -24,15 +24,11 @@ function transform(schematic: FileSystemSchematicDesc, options, cliConfig) {
   return { app, blueprint, defaults };
 }
 
-function getModule(filename, root, source, path = '') {
+function getModule(filename, root, source = '') {
   if (!filename) { return; }
-  const modulePath = globSync(`**/${ filename }`, {
-    cwd: join(root, source, path)
+  return globSync(`**/${ filename }`, {
+    cwd: join(root, source)
   })[ 0 ];
-
-  return path
-    ? modulePath
-    : join(source, modulePath);
 }
 
 export function generateCommandPaths(schematic: FileSystemSchematicDesc, options, cliConfig, rootDir) {
@@ -42,7 +38,9 @@ export function generateCommandPaths(schematic: FileSystemSchematicDesc, options
   const sourceDir
     = !('sourceDir' in blueprint)
       ? null
-      : app.root;
+      : ('appRoot' in blueprint)
+        ? app.root
+        : options.sourceDir || defaults.sourceDir;
 
   const path
     = !('path' in blueprint)
@@ -52,7 +50,14 @@ export function generateCommandPaths(schematic: FileSystemSchematicDesc, options
   const module
     = !('module' in blueprint)
       ? null
-      : getModule(options.module, rootDir, sourceDir || app.root, path);
+      : ('sourceDir' in blueprint)
+        ? getModule(options.module, rootDir, sourceDir)
+        : join(app.root, getModule(options.module, rootDir, app.root))
+
+  const appRoot
+    = module && sourceDir
+      ? '.'
+      : null;
 
   const skipImport
     = !('skipImport' in blueprint)
@@ -62,6 +67,7 @@ export function generateCommandPaths(schematic: FileSystemSchematicDesc, options
         : true;
 
   return omitBy({
+    appRoot,
     module,
     path,
     skipImport,
@@ -107,10 +113,4 @@ export function generateCommandValues(schematic: FileSystemSchematicDesc, option
     = schematic.schemaJson.properties;
 
   return omitBy(options, (_, key) => !(key in blueprint));
-}
-
-export function fixForNrwlSchematics(schematic: FileSystemSchematicDesc, options, cliConfig) {
-  console.log(schematic, options);
-  
-  return {};
 }
