@@ -28,12 +28,6 @@ export function activate(context: vscode.ExtensionContext) {
     return vscode.window.showErrorMessage(MESSAGE.WORKSPACE_UNAVAILABLE);
   }
 
-  if (!config[ 'extensionRoot' ].includes('extensions')) {
-    // Fix extensionRoot when debugging
-    config[ 'extensionRoot' ] = resolve(__dirname, '..', '.angular-gui');
-    config[ 'local' ] = true;
-  }
-
   const output
     = vscode.window.createOutputChannel('GUI for Angular');
   const gui

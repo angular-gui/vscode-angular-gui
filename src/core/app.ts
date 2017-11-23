@@ -135,8 +135,7 @@ export class AngularGUI implements AngularGUIApp {
         this.config.commandOptions.collection,
         cliConfig,
         this.files.workspaceRoot,
-        this.files.extensionFolder,
-        this.files.schematicsFolder);
+        this.files.workspaceSchematicsFolder);
   }
 
   private async clientConfig() {
