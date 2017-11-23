@@ -3,49 +3,44 @@ import * as glob from 'glob';
 import * as path from 'path';
 import * as shell from 'shelljs';
 
+export { normalize } from '@angular-devkit/core';
+
+export const basename = path.basename;
+export const dirname = path.dirname;
+export const join = path.join;
+export const resolve = path.resolve;
+export const existsSync = fs.existsSync;
+export const globSync = glob.sync;
+
 //////////////////////////////////////////////////////////////
 //#region fs helpers
 
-export function existsp(o) {
-  return new Promise(res => {
-    fs.exists(path.resolve(o), (exists) => res(exists));
-  });
-}
-
-export function globp(folder, pattern): Promise<string[]> {
-  return new Promise(res => {
-    glob(`${ folder }/${ pattern }`, (error, matches) =>
-      res(error as any || matches));
-  });
-}
-
 export async function mkdirp(o) {
-  return await existsp(o)
+  return existsSync(o)
     ? true
-    : await mkdirp(path.dirname(o))
+    : await mkdirp(dirname(o))
       .then(() => new Promise(res =>
-        fs.mkdir(path.resolve(o), (error) => res(error || true))));
+        fs.mkdir(resolve(o), (error) => res(error || true))));
 }
 
 export async function readFilep(o) {
   return new Promise(res =>
-    fs.readFile(path.resolve(o), 'utf-8', (error, data) =>
+    fs.readFile(resolve(o), 'utf-8', (error, data) =>
       res(null || data)));
 }
 
 export async function rmdirp(o) {
-  const folder = path.resolve(o);
-  if (shell.test('-d', folder)) {
+  const folder = resolve(o);
+  if (existsSync(folder)) {
     shell.mv(folder, folder + '_');
     shell.rm('-rf', folder + '_');
   }
-  return true;
 }
 
 export async function unlinkp(o) {
-  return (await existsp(o))
+  return existsSync(o)
     ? new Promise(res =>
-      fs.unlink(path.resolve(o), (error) => res(error || true)))
+      fs.unlink(resolve(o), (error) => res(error || true)))
     : true;
 }
 
@@ -53,20 +48,17 @@ export async function unlinkp(o) {
 //////////////////////////////////////////////////////////////
 
 export async function copyFile(filapath, folder) {
-  const target = path.join(folder, path.basename(filapath));
+  const target = join(folder, basename(filapath));
   return writeFile(target, await readFilep(filapath));
 }
 
 export async function copyFolder(folderFrom, folderTo) {
-  const target = path.resolve(folderTo);
+  const target = resolve(folderTo);
   const folder = await mkdirp(target);
   if (folder !== true) { return folder; }
 
-  try {
+  if (globSync(folderFrom).length) {
     shell.cp('-Ru', folderFrom, target);
-    return Promise.resolve(true);
-  } catch (error) {
-    return Promise.resolve(error);
   }
 }
 
@@ -78,20 +70,17 @@ export async function readFile(filepath) {
 }
 
 export async function readFiles(folder, pattern) {
-  const files = await globp(folder, pattern) as string[];
-  if (!files.length) { return files; }
+  const files
+    = globSync(pattern, { cwd: folder })
+      .map(file => join(folder, file));
 
   return Promise.all(files.map(o => readFile(o).then(data => {
-    return { [ path.basename(o) ]: data };
-  })))
-}
-
-export function findFiles(pattern: string, options?: glob.IOptions) {
-  return glob.sync(pattern, options);
+    return { [ basename(o) ]: data };
+  })));
 }
 
 export async function writeFile(filepath, data, backup = false): Promise<any> {
-  const folder = await mkdirp(path.dirname(filepath));
+  const folder = await mkdirp(dirname(filepath));
   if (folder !== true) { return folder; }
 
   data = typeof data === 'object'
@@ -99,7 +88,7 @@ export async function writeFile(filepath, data, backup = false): Promise<any> {
     : data;
 
   return new Promise(res =>
-    fs.writeFile(path.resolve(filepath), data, (error) => res(error || true)));
+    fs.writeFile(resolve(filepath), data, (error) => res(error || true)));
 }
 
 export async function updateJson<T>(filepath, transform: (o: T) => T, backup = false) {
@@ -107,5 +96,5 @@ export async function updateJson<T>(filepath, transform: (o: T) => T, backup = f
   const updated = transform(data);
   return updated
     ? writeFile(filepath, updated, backup)
-    : Promise.resolve(true);
+    : true;
 }

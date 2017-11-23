@@ -7,8 +7,9 @@ Run Angular CLI from your browser!
 ## Features
 
 * Overview of all available command options
-* Save and reuse commands
+* Reusable shell commands
 * Support for multiple schematics
+* Modify schematic templates
 * Access to command options that are locked in CLI
 * Configurable defaults for command options
 
@@ -36,6 +37,7 @@ This extension contributes the following settings:
   * `target`: list of available targets
   * `collection`: list of available schematic collections
   * `styleext`: list of available style extensions
+* `angular-gui.commands`: List of commands that will be displayed in client app.
 
 Default value will be set to the first item from the list.
 

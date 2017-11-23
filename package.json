@@ -2,7 +2,7 @@
   "name": "angular-gui",
   "displayName": "GUI for Angular",
   "description": "Run Angular CLI from your browser",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "publisher": "sasxa-net",
   "license": "MIT",
   "repository": {
@@ -40,7 +40,7 @@
       },
       {
         "command": "extension.rebuildConfiguration",
-        "title": "GUI for Angular: Rebuild schematics"
+        "title": "GUI for Angular: Rebuild client configuration"
       },
       {
         "command": "extension.disconnect",
@@ -65,12 +65,41 @@
           "default": ".",
           "description": "Name for the runner script that can be used to excute commands from terminal by name: \"npm run . <name>\""
         },
+        "angular-gui.commands": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "build",
+              "completion",
+              "doc",
+              "e2e",
+              "eject",
+              "generate",
+              "lint",
+              "new",
+              "serve",
+              "shell",
+              "test",
+              "version",
+              "xi18n"
+            ]
+          },
+          "description": "List of commands that will be displayed in client app.",
+          "default": [
+            "build",
+            "e2e",
+            "generate",
+            "lint",
+            "serve",
+            "shell",
+            "test",
+            "xi18n"
+          ]
+        },
         "angular-gui.commandOptions": {
           "type": "object",
           "description": "Command options' values and defaults",
-          "properties": {
-            "prefix": "array"
-          },
           "default": {
             "environment": [
               "dev",
@@ -104,7 +133,8 @@
     "serve:local": "node out/local.js",
     "test": "npm run compile && node ./node_modules/vscode/bin/test",
     "vscode:prepublish": "npm run build",
-    "watch": "webpack --config webpack.local.js --display minimal --watch"
+    "watch": "webpack --config webpack.local.js --display minimal --watch",
+    "watch:debug": "webpack --watch"
   },
   "devDependencies": {
     "@types/express": "^4.0.39",

@@ -1,11 +1,9 @@
-import { camelize, classify, normalize } from "@angular-devkit/core";
+import { classify, omitBy } from './utils';
+import { globSync, join } from './helpers';
 
 import { FileSystemSchematicDesc } from "@angular-devkit/schematics/tools";
-import { findFiles } from "./helpers";
-import { join } from 'path';
-import { omitBy } from "./utils";
 
-function processInputs(schematic: FileSystemSchematicDesc, options, cliConfig) {
+function transform(schematic: FileSystemSchematicDesc, options, cliConfig) {
   const blueprint: any
     = schematic.schemaJson.properties;
 
@@ -28,7 +26,7 @@ function processInputs(schematic: FileSystemSchematicDesc, options, cliConfig) {
 
 function getModule(filename, root, source, path = '') {
   if (!filename) { return; }
-  const modulePath = findFiles(`**/${ filename }`, {
+  const modulePath = globSync(`**/${ filename }`, {
     cwd: join(root, source, path)
   })[ 0 ];
 
@@ -39,7 +37,7 @@ function getModule(filename, root, source, path = '') {
 
 export function generateCommandPaths(schematic: FileSystemSchematicDesc, options, cliConfig, rootDir) {
   const { app, blueprint, defaults }
-    = processInputs(schematic, options, cliConfig);
+    = transform(schematic, options, cliConfig);
 
   const sourceDir
     = !('sourceDir' in blueprint)
@@ -73,7 +71,7 @@ export function generateCommandPaths(schematic: FileSystemSchematicDesc, options
 
 export function generateCommandDefaults(schematic: FileSystemSchematicDesc, options, cliConfig) {
   const { app, blueprint, defaults }
-    = processInputs(schematic, options, cliConfig);
+    = transform(schematic, options, cliConfig);
 
   const htmlTemplate
     = !('htmlTemplate' in blueprint)
@@ -109,4 +107,10 @@ export function generateCommandValues(schematic: FileSystemSchematicDesc, option
     = schematic.schemaJson.properties;
 
   return omitBy(options, (_, key) => !(key in blueprint));
+}
+
+export function fixForNrwlSchematics(schematic: FileSystemSchematicDesc, options, cliConfig) {
+  console.log(schematic, options);
+  
+  return {};
 }

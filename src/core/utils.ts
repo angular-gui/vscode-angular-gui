@@ -1,3 +1,5 @@
+export { camelize, classify, dasherize, terminal } from '@angular-devkit/core';
+
 export function sort(direction: 'asc' | 'desc', transform = o => o) {
   return (a, b) => {
     a = transform(a);

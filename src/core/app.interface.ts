@@ -8,8 +8,7 @@ export interface AngularGUIApp {
   config: typeof defaultConfiguration;
   files: FilesManager;
   logger;
-  server;
+  runner;
   schematics: SchematicsManager;
-  socket: SocketIO.EngineSocket;
   rebuild: () => void;
 }

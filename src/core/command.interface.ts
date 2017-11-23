@@ -3,6 +3,7 @@ export interface Command {
   guid: string;
   name: string;
   options?: Array<{ name: string; value: any; }>;
+  payload: any;
   pid: number;
   script: string;
   type: string;

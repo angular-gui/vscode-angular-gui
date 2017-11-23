@@ -1,40 +1,33 @@
-import { Collection, DryRunEvent, DryRunSink, FileSystemSink, FileSystemTree, SchematicEngine, Tree } from '@angular-devkit/schematics';
-import { CollectionCannotBeResolvedException, FileSystemEngineHost, FileSystemHost, FileSystemSchematicDesc, NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
-import { camelize, dasherize, terminal } from '@angular-devkit/core';
-import { generateCommandDefaults, generateCommandPaths, generateCommandValues } from './options';
-import { omitBy, sort } from './utils';
+//#region Imports
+
+import {
+  Collection,
+  DryRunEvent,
+  DryRunSink,
+  FileSystemSink,
+  FileSystemTree,
+  SchematicEngine,
+  Tree
+} from '@angular-devkit/schematics';
+import {
+  FileSystemHost,
+  FileSystemSchematicDesc
+} from '@angular-devkit/schematics/tools';
+import { camelize, dasherize, sort, terminal } from './utils';
+import { copyFolder, dirname, join } from './helpers';
+import {
+  fixForNrwlSchematics,
+  generateCommandDefaults,
+  generateCommandPaths,
+  generateCommandValues
+} from './options';
 
 import { Command } from './command.interface';
-import { existsSync } from 'fs';
-import { sync as globSync } from 'glob';
-import { join } from 'path';
+import { GuiFileSystemEngineHost } from './fixes';
+import { MESSAGE } from './messages';
 import { of } from 'rxjs/observable/of';
 
-export class GuiEngineHost extends FileSystemEngineHost {
-  constructor(protected _root: string) { super(_root); }
-
-  protected _resolveCollectionPath(name: string): string {
-    // Allow `${_root}/${name}.json` as a collection.
-    if (existsSync(join(this._root, name + '.json'))) {
-      return join(this._root, name + '.json');
-    }
-
-    // Allow `${_root}/${name}/collection.json.
-    if (existsSync(join(this._root, name, 'collection.json'))) {
-      return join(this._root, name, 'collection.json');
-    }
-
-    // Allow `${_root}/ ** /${name}/collection.json.
-    const collectionJsonPath = globSync(`${ name }/**/collection.json`, {
-      cwd: this._root
-    })[ 0 ];
-    if (collectionJsonPath) {
-      return join(this._root, collectionJsonPath);
-    }
-
-    throw new CollectionCannotBeResolvedException(name);
-  }
-}
+//#endregion
 
 export class SchematicsManager {
   private _blueprints;
@@ -42,17 +35,22 @@ export class SchematicsManager {
   host;
 
   constructor(
+    public collections: string[],
     private cliConfig,
-    private collections: string[],
     private workspaceRoot: string,
-    private extensionFolder: string) {
+    private extensionFolder: string,
+    private schematicsFolder: string) {
 
-    this.host = new GuiEngineHost(this.extensionFolder);
+    /**
+     * https://github.com/angular/devkit/issues/285
+     */
+    this.host = new GuiFileSystemEngineHost(this.extensionFolder);
     this.engine = new SchematicEngine(this.host);
     this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => ({
       ...generateCommandDefaults(schematic, options, this.cliConfig),
       ...generateCommandValues(schematic, options),
       ...generateCommandPaths(schematic, options, this.cliConfig, this.workspaceRoot),
+      ...fixForNrwlSchematics(schematic, options, this.cliConfig),
     }));
   }
 
@@ -79,13 +77,15 @@ export class SchematicsManager {
    *
    */
   blueprintCommand(blueprint: string) {
-    const engine: SchematicEngine<any, any> = this.engine;
-    const collection = engine.createCollection(this.blueprints[ blueprint ]);
-    const extended = collection.description.schematics[ blueprint ].extends;
+    const collection
+      = this.engine.createCollection(this.blueprints[ blueprint ]) as Collection<any, any>;
+    const extended
+      = collection.description.schematics[ blueprint ].extends;
     let schematic = collection.createSchematic(blueprint);
 
     if (extended) {
-      const collection = engine.createCollection(extended.split(':')[ 0 ]);
+      const collection
+        = this.engine.createCollection(extended.split(':')[ 0 ]) as Collection<any, any>;
       schematic = collection.createSchematic(blueprint);
     }
 
@@ -111,6 +111,21 @@ export class SchematicsManager {
           }
         }).sort(sort('asc', o => o.name)),
     };
+  }
+
+  cloneSchematic(command: Command) {
+    const blueprint
+      = command.payload;
+    const collection
+      = this.engine.createCollection(this.blueprints[ blueprint ]) as Collection<any, any>;
+    const schematic
+      = collection.createSchematic(blueprint);
+    const folderFrom
+      = join(dirname(schematic.description.path), 'files');
+    const folderTo
+      = join(this.schematicsFolder, schematic.description.collection.name, blueprint);
+
+    copyFolder(folderFrom, folderTo);
   }
 
   generateBlueprint(command: Command) {
@@ -178,7 +193,7 @@ export class SchematicsManager {
       .map(() =>
         loggingQueue
           .concat(options.dryRun
-            ? terminal.yellow('NOTE: Run with "dry run" no changes were made.')
+            ? terminal.yellow(MESSAGE.DRY_RUN)
             : null)
           .filter(o => !!o));
   }

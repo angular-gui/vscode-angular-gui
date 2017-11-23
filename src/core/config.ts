@@ -2,6 +2,16 @@ export const defaultConfiguration = {
   port: 4300,
   rootDir: '.angular-gui',
   npmRunner: '.',
+  commands: [
+    'build',
+    'e2e',
+    'generate',
+    'lint',
+    'serve',
+    'shell',
+    'test',
+    'xi18n',
+  ],
   commandOptions: {
     environment: [
       'dev',

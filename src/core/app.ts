@@ -1,3 +1,5 @@
+//#region Imports
+
 import * as Converter from 'ansi-to-html';
 import * as commands from '../commands';
 import * as express from 'express';
@@ -6,59 +8,57 @@ import * as stoppable from 'stoppable';
 
 import { sort, uniqueFn } from './utils';
 
+import { AngularGUIApp } from './app.interface';
 import { Command } from './command.interface';
 import { CommandRunner } from './runner';
 import { FilesManager } from './files';
+import { MESSAGE } from './messages';
 import { SchematicsManager } from './schematics';
-import { Server } from 'http';
 import { Subject } from 'rxjs/Subject';
 
-export class AngularGUI {
+//#endregion 
+
+export class AngularGUI implements AngularGUIApp {
   private app;
+  private server;
+
   action = new Subject();
   files: FilesManager;
-  server;
+  runner: CommandRunner;
   schematics: SchematicsManager;
-  socket;
 
   constructor(public config, public logger) {
     this.app = express().get('/', (req, res) => res.sendStatus(202));
-    this.files = new FilesManager(config);
-    this.initializeSchematics();
+    this.runner = new CommandRunner(this);
+    this.initialize(config);
   }
 
   start(statusUpdate) {
     this.server = stoppable(this.app.listen(this.config.port, () => {
-      this.logger(`Listening on localhost:${ this.config.port }...`);
+      this.logger(MESSAGE.SERVER_CONNECTED(this.config.port));
     }), 0);
 
     this.server.once('listening', () => statusUpdate('listening'));
 
-    this.socket = io(this.server).on('connection', async socket => {
-      socket.emit('init', await this.clientConfig());
+    io(this.server)
+      .on('connection', async socket => {
+        statusUpdate('connected');
+        this.logger(MESSAGE.CLIENT_CONNECTED(socket.handshake.headers.origin));
 
-      const runner = new CommandRunner(this, socket);
+        this.runner.connect(socket);
+        socket.emit('init', await this.clientConfig());
 
-      socket.on('action', (command: Command) =>
-        runner.processAction(command));
+        socket.on('action', (command: Command) =>
+          this.runner.processAction(command));
 
-      socket.on('command', (command: Command) =>
-        runner.processCommand(command));
+        socket.on('command', (command: Command) =>
+          this.runner.processCommand(command));
 
-      socket.on('disconnect', socket => {
-        this.logger(`Client disconnected.`);
+        socket.on('disconnect', socket => {
+          this.logger(MESSAGE.CLIENT_DISCONNECTED);
+          statusUpdate('listening');
+        });
       });
-    });
-
-    this.socket.on('connection', socket => {
-      this.logger(`Client connected from ${ socket.handshake.headers.origin }.`);
-      statusUpdate('connected');
-    });
-
-    this.socket.on('disconnect', socket => {
-      this.logger(`Server terminated`);
-      statusUpdate('listening');
-    });
 
     return this.action.asObservable();
   }
@@ -66,6 +66,7 @@ export class AngularGUI {
   stop(statusUpdate) {
     this.server.once('close', () => statusUpdate('disconnected'));
     this.server.stop();
+    this.runner.disconnect();
   }
 
   /**
@@ -75,37 +76,47 @@ export class AngularGUI {
    * or manually via extension command `extension.rebuildConfiguration`
    */
   async rebuild() {
-    this.logger('Rebuilding Schematics and updating Client Configuration...');
+    this.logger(MESSAGE.REBUILD_START);
 
-    const collections = this.config.commandOptions.collection;
+    return this.files.deleteClientConfig()
+      .then(() => this.files.copyProjectSchematics(this.schematics.collections))
+      .then(() => this.files.copyUserSchematics())
+      .then(() => this.files.createRunnerScript())
+      .then(() => {
+        this.config.commandOptions.collection
+          = this.schematics.collections;
 
-    await this.files.copySchematics(collections)
-      .then(() => this.files.fixCollectionNames(collections))
-      .then(() => this.files.createRunnerScript());
+        this.config.commandOptions.blueprint
+          = Object.keys(this.schematics.blueprints)
+            .sort(sort('asc'));
 
-    this.config.commandOptions.blueprint
-      = Object.keys(this.schematics.blueprints)
-        .sort(sort('asc'))
+        const cliSchematics
+          = this.config.commandOptions.blueprint
+            .map(blueprint =>
+              this.schematics.blueprintCommand(blueprint))
+            .map(command =>
+              this.updateCommandOptions(command));
 
-    const cliSchematics
-      = this.config.commandOptions.blueprint
-        .map(blueprint =>
-          this.schematics.blueprintCommand(blueprint))
-        .map(command => this.updateCommandOptions(command));
+        const cliCommands
+          = Object.values(commands)
+            .filter(command => this.config.commands.includes(command.name))
+            .map(command => this.updateCommandOptions(command));
 
-    const cliCommands
-      = Object.values(commands)
-        .map(command => this.updateCommandOptions(command));
-
-    return this.files
-      .saveClientConfig({ cliCommands, cliSchematics, })
-      .then(async data => {
-        this.logger('Rebuilding complete.');
-        this.socket.emit('init', await this.clientConfig());
+        return this.files
+          .saveClientConfig({ cliCommands, cliSchematics });
+      })
+      .then(() => this.clientConfig())
+      .then(config => {
+        this.logger(MESSAGE.REBUILD_FINISH);
+        if (this.runner.socket) {
+          this.runner.socket.emit('init', config);
+        }
       })
   }
 
-  private async initializeSchematics() {
+  async initialize(config) {
+    this.files = new FilesManager(this.config = config);
+
     const cliConfig
       = await this.files.cliConfig;
 
@@ -121,10 +132,11 @@ export class AngularGUI {
 
     this.schematics
       = new SchematicsManager(
-        cliConfig,
         this.config.commandOptions.collection,
+        cliConfig,
         this.files.workspaceRoot,
-        this.files.extensionFolder);
+        this.files.extensionFolder,
+        this.files.schematicsFolder);
   }
 
   private async clientConfig() {
@@ -159,12 +171,12 @@ export class AngularGUI {
    * and sets option "default" to first item from config array.
    *
    * For example:
-   *
-   *   config.commandOptions.target: [
-   *     'development',
-   *     'production',
-   *   ]
-   *
+   * ```
+   * config.commandOptions.target: [
+   *   'development',
+   *   'production',
+   * ]
+   * ```
    * will be used for commands that have `target` option,
    * like "build", "serve", "test"
    * and default value will be "development"
