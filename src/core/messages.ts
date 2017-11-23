@@ -11,15 +11,15 @@ export const MESSAGE = {
 
   DRY_RUN: 'NOTE: Run with "dry run" no changes were made.',
 
-  EXEC_START: name => `Executing script: ${ name }.sh`,
-  EXEC_SUCCESS: name => `Executed script: ${ name }.sh`,
+  EXEC_START: name => `Executing script: ${ name }`,
+  EXEC_SUCCESS: name => `Executed script: ${ name }`,
 
   FEATURE_UNAVAILABLE: 'This feature is not available.',
 
   INVALID_COMMAND: 'Invalid command',
 
-  KILL_START: name => `Terminating script: ${ name }.sh`,
-  KILL_SUCCESS: name => `Terminated script: ${ name }.sh`,
+  KILL_START: name => `Terminating script: ${ name }`,
+  KILL_SUCCESS: name => `Terminated script: ${ name }`,
 
   REBUILD_START: 'Rebuilding client configuration...',
   REBUILD_FINISH: 'Rebuilding complete.',
