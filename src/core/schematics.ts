@@ -11,19 +11,18 @@ import {
 } from '@angular-devkit/schematics';
 import {
   FileSystemHost,
-  FileSystemSchematicDesc
+  FileSystemSchematicDesc,
+  NodeModulesEngineHost
 } from '@angular-devkit/schematics/tools';
 import { camelize, dasherize, sort, terminal } from './utils';
-import { copyFolder, dirname, join } from './helpers';
+import { copyFolder, dirname, existsSync, join } from './helpers';
 import {
-  fixForNrwlSchematics,
   generateCommandDefaults,
   generateCommandPaths,
   generateCommandValues
 } from './options';
 
 import { Command } from './command.interface';
-import { GuiFileSystemEngineHost } from './fixes';
 import { MESSAGE } from './messages';
 import { of } from 'rxjs/observable/of';
 
@@ -38,20 +37,19 @@ export class SchematicsManager {
     public collections: string[],
     private cliConfig,
     private workspaceRoot: string,
-    private extensionFolder: string,
-    private schematicsFolder: string) {
+    private workspaceSchematicsFolder: string) {
 
-    /**
-     * https://github.com/angular/devkit/issues/285
-     */
-    this.host = new GuiFileSystemEngineHost(this.extensionFolder);
+    this.host = new NodeModulesEngineHost();
     this.engine = new SchematicEngine(this.host);
-    this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => ({
-      ...generateCommandDefaults(schematic, options, this.cliConfig),
-      ...generateCommandValues(schematic, options),
-      ...generateCommandPaths(schematic, options, this.cliConfig, this.workspaceRoot),
-      ...fixForNrwlSchematics(schematic, options, this.cliConfig),
-    }));
+    this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => {
+      const transformed = {
+        ...generateCommandDefaults(schematic, options, this.cliConfig),
+        ...generateCommandValues(schematic, options),
+        ...generateCommandPaths(schematic, options, this.cliConfig, this.workspaceRoot),
+      };
+      // console.log('TRANSFORMED:', schematic.name, transformed);
+      return transformed;
+    });
   }
 
   /**
@@ -90,9 +88,11 @@ export class SchematicsManager {
     }
 
     const { aliases, description, name, schemaJson } = schematic.description;
+    const modified
+      = existsSync(join(this.workspaceSchematicsFolder, schematic.description.collection.name, blueprint));
 
     return {
-      aliases, description, name,
+      aliases, description, name, modified,
       collection: schematic.collection.description.name,
       availableOptions: Object.entries(schemaJson.properties)
         .map(([ name, options ]) => {
@@ -113,7 +113,13 @@ export class SchematicsManager {
     };
   }
 
-  cloneSchematic(command: Command) {
+  /**
+   * Copy schematic files to workspace rootDir
+   * to allow users to modify them
+   * 
+   * @param command `command.payload` is name of the blueprint
+   */
+  cloneSchematic(command: Command, files: string | false = 'files') {
     const blueprint
       = command.payload;
     const collection
@@ -121,9 +127,9 @@ export class SchematicsManager {
     const schematic
       = collection.createSchematic(blueprint);
     const folderFrom
-      = join(dirname(schematic.description.path), 'files');
+      = join(dirname(schematic.description.path), files ? files : '');
     const folderTo
-      = join(this.schematicsFolder, schematic.description.collection.name, blueprint);
+      = join(this.workspaceSchematicsFolder, schematic.description.collection.name, files ? blueprint : '');
 
     copyFolder(folderFrom, folderTo);
   }

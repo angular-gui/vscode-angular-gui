@@ -57,7 +57,12 @@ export async function copyFolder(folderFrom, folderTo) {
   const folder = await mkdirp(target);
   if (folder !== true) { return folder; }
 
-  if (globSync(folderFrom).length) {
+  const shouldCopy
+    = typeof folderFrom === 'string'
+      ? globSync(folderFrom).length
+      : folderFrom.length;
+
+  if (shouldCopy) {
     shell.cp('-Ru', folderFrom, target);
   }
 }
