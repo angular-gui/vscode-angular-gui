@@ -31,16 +31,26 @@ export class CommandRunner {
     if (!this.socket) { return; }
     switch (command.type) {
       case 'clone':
-        return this.app.schematics.cloneSchematic(command);
+        return this.app.schematics
+          .cloneSchematic(command)
+          .then(data => {
+            this.emit('output', this.converter.toHtml(data));
+            this.emit('success', MESSAGE.SCHEMATIC_CLONE_SUCCESS);
+          });
 
       case 'open':
         return this.app.action.next(command);
 
       case 'rebuild':
-        return this.app.rebuild();
+        return this.app.rebuild()
+          .then(() =>
+            this.emit('success', MESSAGE.REBUILD_FINISH))
+
+      case '__DEV__':
+        return;
 
       default:
-        return this.emit('failure', command.guid, MESSAGE.INVALID_COMMAND);
+        return this.emit('failure', MESSAGE.INVALID_COMMAND, command.guid);
     }
   }
 
@@ -64,7 +74,7 @@ export class CommandRunner {
         return this.saveScript(command);
 
       default:
-        return this.emit('failure', command.guid, MESSAGE.INVALID_COMMAND);
+        return this.emit('failure', MESSAGE.INVALID_COMMAND, command.guid);
     }
   }
 
@@ -76,8 +86,8 @@ export class CommandRunner {
     this.app.logger(MESSAGE.DELETE_START(name));
 
     return await this.app.files.deleteCommand(name)
-      ? this.emit('success', command.guid, MESSAGE.DELETE_SUCCESS(name))
-      : this.emit('failure', command.guid, MESSAGE.DELETE_FAILURE);
+      ? this.emit('success', MESSAGE.DELETE_SUCCESS(name), command.guid)
+      : this.emit('failure', MESSAGE.DELETE_FAILURE, command.guid);
   }
 
   private executeCommand(command: Command) {
@@ -94,44 +104,65 @@ export class CommandRunner {
         { cwd: this.app.files.workspaceRoot },
         (error, stdout, stderr) => {
           if (error) {
-            this.emit('failure', command.guid, this.converter.toHtml(stderr));
+            this.emit('failure', this.converter.toHtml(stderr), command.guid);
           }
         });
 
     if (!child) {
-      return this.emit('success', command.guid, MESSAGE.EXEC_SUCCESS(name));
+      return this.emit('success', MESSAGE.EXEC_SUCCESS(name), command.guid);
     }
 
-    this.emit('start', command.guid, child.pid);
+    this.emit('start', child.pid, command.guid);
     child.stderr.on('data', data => this.execOutput(data, command));
     child.stdout.on('data', data => this.execOutput(data, command));
 
     child.on('exit', (code, signal) => {
       if (!code) {
-        this.emit('success', command.guid, MESSAGE.EXEC_SUCCESS(name));
+        this.emit('success', MESSAGE.EXEC_SUCCESS(name), command.guid);
       }
     });
   }
 
+  private generateNrwlApp(command: Command) {
+    const name
+      = command.options.find(o => o.name === 'name').value;
+    const options
+      = command.options
+        .filter(o => o.name !== 'name')
+        // .concat({ name: 'source-dir', value: '../../src' })
+    const value
+      = `ng generate app ${ name }`;
+    const script
+      = [ value ]
+        .concat(...options.map(o => `--${ o.name } ${ o.value }`))
+        .join(' ');
+
+    return this.executeCommand({ ...command, options, value, script });
+  }
+
   private generateCommand(command: Command) {
+    if (command.value === 'ng generate app') {
+      return this.generateNrwlApp(command);
+    }
+
     this.app.logger(MESSAGE.EXEC_START(command.value));
-    this.emit('start', command.guid, true);
+    this.emit('start', true, command.guid);
 
     this.app.schematics.generateBlueprint(command)
       .subscribe({
         next: loggingQueue =>
           loggingQueue.forEach(log => {
             this.app.logger(log);
-            this.emit('output', command.guid, this.converter.toHtml(log));
+            this.emit('output', this.converter.toHtml(log), command.guid);
           }),
 
         error: (error) => {
           this.app.logger(error.message);
-          this.emit('failure', command.guid, this.converter.toHtml(error.message));
+          this.emit('failure', this.converter.toHtml(error.message), command.guid);
         },
 
         complete: () =>
-          this.emit('success', command.guid, MESSAGE.EXEC_SUCCESS(command.value))
+          this.emit('success', MESSAGE.EXEC_SUCCESS(command.value), command.guid),
       });
   }
 
@@ -148,7 +179,7 @@ export class CommandRunner {
         try { process.kill(pid, 'SIGKILL'); } catch { }
       })
 
-      this.emit('success', command.guid, MESSAGE.KILL_SUCCESS(name));
+      this.emit('success', MESSAGE.KILL_SUCCESS(name), command.guid);
     });
   }
 
@@ -165,8 +196,8 @@ export class CommandRunner {
         : command.script;
 
     return await this.app.files.saveCommand(name, script)
-      ? this.emit('success', command.guid, MESSAGE.SAVE_SUCCESS(name))
-      : this.emit('failure', command.guid, MESSAGE.SAVE_FAILURE);
+      ? this.emit('success', MESSAGE.SAVE_SUCCESS(name), command.guid)
+      : this.emit('failure', MESSAGE.SAVE_FAILURE, command.guid);
   }
 
   private execOutput(data, command: Command) {
@@ -185,16 +216,16 @@ export class CommandRunner {
 
       if (this.progress !== current) {
         this.progress = current;
-        this.emit('progress', command.guid, this.progress);
+        this.emit('progress', this.progress, command.guid);
       }
     }
 
     if (output && !outputRegexp.test(output)) {
-      this.emit('output', command.guid, this.converter.toHtml(data));
+      this.emit('output', this.converter.toHtml(data), command.guid);
     }
   }
 
-  private emit(event, guid: string, message: any) {
+  private emit(event, message: any, guid?: string) {
     if (!this.socket) { return; }
     this.socket.emit(event, { guid, message });
   }

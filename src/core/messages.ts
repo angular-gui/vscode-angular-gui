@@ -28,6 +28,11 @@ export const MESSAGE = {
   SAVE_SUCCESS: name => `Saved script: ${ name }.sh`,
   SAVE_FAILURE: 'Save failed',
 
+  SCHEMATIC_CLONE: name =>
+    `Blueprint "${ name }" is copied to the workspace.\n`
+    + 'Modify files and <a class="rebuild">rebuild configuration</a> in order to use them.',
+  SCHEMATIC_CLONE_SUCCESS: 'Copied schematic to workspace.',
+
   SERVER_CONNECTED: port => `Listening on localhost:${ port }...`,
   SERVER_DISCONNECTED: 'Server terminated',
 
