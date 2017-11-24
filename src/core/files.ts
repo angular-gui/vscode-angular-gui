@@ -1,6 +1,7 @@
 import {
   basename,
   copyFolder,
+  dirname,
   existsSync,
   globSync,
   join,
@@ -61,15 +62,14 @@ export class FilesManager {
                 : null;
 
           return schematicsFolder
-            ? [ schematicsFolder, collectionName ]
+            ? {
+              source: join(schematicsFolder, '*'),
+              target: join(this.extensionRoot, 'node_modules', collectionName)
+            }
             : null;
         })
         .filter(o => !!o)
-        .map(([ folder, name ]) => [
-          join(folder, '*'),
-          join(this.extensionRoot, 'node_modules', name)
-        ])
-        .map(([ folderFrom, folderTo ]) => copyFolder(folderFrom, folderTo))
+        .map(o => copyFolder(o.source, o.target))
 
     return Promise.all(promises);
   }
@@ -79,10 +79,20 @@ export class FilesManager {
    * from gui schematics folder to extension folder
    * to be able to use them in client app
    */
-  copyUserSchematics() {
-    const folderFrom = join(this.workspaceSchematicsFolder, '*');
-    const folderTo = join(this.extensionRoot, 'node_modules');
-    return copyFolder(folderFrom, folderTo);
+  async copyUserSchematics() {
+    const promises
+      = globSync('**/.changes.json', { cwd: this.workspaceSchematicsFolder })
+        .map(pathinfo => join(this.workspaceSchematicsFolder, pathinfo))
+        .map(pathinfo => {
+          return readFile(pathinfo)
+            .then(changes => ({
+              ...changes,
+              source: join(dirname(pathinfo), '*'),
+              target: join(this.extensionRoot, 'node_modules', changes.path),
+            }))
+            .then(o => copyFolder(o.source, o.target))
+        })
+    return Promise.all(promises);
   }
 
   createRunnerScript() {

@@ -15,7 +15,7 @@ import {
   NodeModulesEngineHost
 } from '@angular-devkit/schematics/tools';
 import { camelize, dasherize, sort, terminal } from './utils';
-import { copyFolder, dirname, existsSync, join } from './helpers';
+import { copyFolder, dirname, existsSync, join, writeFile } from './helpers';
 import {
   generateCommandDefaults,
   generateCommandPaths,
@@ -89,7 +89,7 @@ export class SchematicsManager {
 
     const { aliases, description, name, schemaJson } = schematic.description;
     const modified
-      = existsSync(join(this.workspaceSchematicsFolder, schematic.description.collection.name, blueprint));
+      = existsSync(join(this.workspaceSchematicsFolder, blueprint));
 
     return {
       aliases, description, name, modified,
@@ -129,9 +129,25 @@ export class SchematicsManager {
     const folderFrom
       = join(dirname(schematic.description.path), files ? files : '');
     const folderTo
-      = join(this.workspaceSchematicsFolder, schematic.description.collection.name, files ? blueprint : '');
+      = join(this.workspaceSchematicsFolder, files ? blueprint : '');
+    const message
+      = `${ terminal.green('COPY ') } ${ folderTo }\n`
+      + MESSAGE.SCHEMATIC_CLONE(blueprint);
 
-    copyFolder(folderFrom, folderTo);
+    return copyFolder(folderFrom, folderTo)
+      .then(() => {
+        const filepath = join(folderTo, '.changes.json');
+        const path
+          = dirname(schematic.description.path)
+            .split('node_modules')
+            .pop()
+            .replace(/^(\\|\/)/, '');
+
+        // TODO: Figure out a good way to delete stuff from original schematic...
+
+        return writeFile(filepath, { path });
+      })
+      .then(() => message);
   }
 
   generateBlueprint(command: Command) {
@@ -154,20 +170,20 @@ export class SchematicsManager {
       switch (event.kind) {
         case 'error':
           const desc = event.description == 'alreadyExist' ? 'already exists' : 'does not exist.';
-          loggingQueue.push(`${ terminal.red('ERROR!') } ${ event.path } ${ desc }.`);
+          loggingQueue.push(`${ terminal.red('ERROR! ') } ${ event.path } ${ desc }.`);
           error = true;
           break;
         case 'update':
-          loggingQueue.push(`${ terminal.white('UPDATE') } ${ event.path } (${ event.content.length } bytes)`);
+          loggingQueue.push(`${ terminal.white('UPDATE ') } ${ event.path } (${ event.content.length } bytes)`);
           break;
         case 'create':
-          loggingQueue.push(`${ terminal.green('CREATE') } ${ event.path } (${ event.content.length } bytes)`);
+          loggingQueue.push(`${ terminal.green('CREATE ') } ${ event.path } (${ event.content.length } bytes)`);
           break;
         case 'delete':
-          loggingQueue.push(`${ terminal.yellow('DELETE') } ${ event.path }`);
+          loggingQueue.push(`${ terminal.yellow('DELETE ') } ${ event.path }`);
           break;
         case 'rename':
-          loggingQueue.push(`${ terminal.blue('RENAME') } ${ event.path } => ${ event.to }`);
+          loggingQueue.push(`${ terminal.blue('RENAME ') } ${ event.path } => ${ event.to }`);
           break;
       }
     });
