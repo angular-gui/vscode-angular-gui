@@ -1,10 +1,21 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
+# Version 0.4.2: Minor fixes
+* Fix: Race condition when rebuilding client configuration
+* Fix: Check if file exists before opening it
+* Fix: Don't include blueprints in configuration change check
+* Fix: Use `forEach` instead of `subscribe` for action subject (fixes vscode's `TypeError: Converting circular structure to JSON`)
+
+# Version 0.4.1: Minor fixes
+* Fix: Update workspace and extension paths 
+* Fix: Improved module resolution for generate command
+* Fix: Improved handling of modified schematics
+* Feature: Notify client about configuration changes
+
 # Version 0.4.0: Beta release
 ## VSCode Extension
 * Schematics: 
-    * Schematics now use `FileSystemEngineHost`
     * Run `express` schematic to set up serving from dist folder. Comes with support for gzip compression, and url rewrites.
     * Modify schematics templates and use them with generate command.
 * Configuration:

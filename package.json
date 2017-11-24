@@ -1,8 +1,8 @@
 {
   "name": "angular-gui",
   "displayName": "GUI for Angular",
-  "description": "Run Angular CLI from your browser",
-  "version": "0.4.0",
+  "description": "Manage your Angular CLI projects with ease!",
+  "version": "0.4.2",
   "publisher": "sasxa-net",
   "license": "MIT",
   "repository": {
@@ -142,23 +142,24 @@
     "@types/node": "^8.0.53",
     "@types/shelljs": "^0.7.6",
     "@types/socket.io": "^1.4.31",
-    "awesome-typescript-loader": "^3.3.0",
-    "concurrently": "^3.5.0",
+    "awesome-typescript-loader": "^3.4.0",
+    "concurrently": "^3.5.1",
     "nodemon": "^1.12.1",
     "source-map-loader": "^0.2.3",
-    "vscode": "^1.1.7",
+    "vscode": "^1.1.8",
     "webpack": "^3.8.1",
     "webpack-node-externals": "^1.6.0"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "0.0.36",
-    "ansi-to-html": "^0.6.3",
-    "express": "^4.16.2",
-    "ps-tree": "^1.1.0",
-    "rxjs": "^5.5.2",
-    "shelljs": "^0.7.8",
-    "socket.io": "^2.0.4",
-    "stoppable": "^1.0.4",
-    "typescript": "^2.6.1"
+    "@angular-devkit/core": "0.0.21",
+    "@angular-devkit/schematics": "0.0.37",
+    "ansi-to-html": "0.6.3",
+    "express": "4.16.2",
+    "ps-tree": "1.1.0",
+    "rxjs": "5.5.2",
+    "shelljs": "0.7.8",
+    "socket.io": "2.0.4",
+    "stoppable": "1.0.4",
+    "typescript": "2.6.1"
   }
 }

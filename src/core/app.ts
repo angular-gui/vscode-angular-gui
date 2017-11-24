@@ -22,7 +22,7 @@ export class AngularGUI implements AngularGUIApp {
   private app;
   private server;
 
-  action = new Subject();
+  action: Subject<any> = new Subject();
   files: FilesManager;
   runner: CommandRunner;
   schematics: SchematicsManager;
@@ -78,7 +78,8 @@ export class AngularGUI implements AngularGUIApp {
   async rebuild() {
     this.logger(MESSAGE.REBUILD_START);
 
-    return this.files.deleteClientConfig()
+    return this.files.cliConfig
+      .then(() => this.files.deleteClientConfig())
       .then(() => this.files.copyProjectSchematics(this.schematics.collections))
       .then(() => this.files.copyUserSchematics())
       .then(() => this.files.createRunnerScript())

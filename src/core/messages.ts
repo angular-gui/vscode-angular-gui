@@ -4,10 +4,13 @@ export const MESSAGE = {
   CLIENT_SHOULD_UPDATE: 'Client not connected. Please update settings manually.',
 
   CONFIG_CHANGE: 'GUI for Angular configuration changed. You should rebuild client configuration.',
+  CONFIG_UNAVAILABLE: '".angular-cli.json" not found in workspace.',
 
   DELETE_START: name => `Deleting script: ${ name }.sh`,
   DELETE_SUCCESS: name => `Deleted script: ${ name }.sh`,
   DELETE_FAILURE: 'Delete failed',
+
+  DOCUMENT_DOESNT_EXIST: 'Document does not exist.',
 
   DRY_RUN: 'NOTE: Run with "dry run" no changes were made.',
 

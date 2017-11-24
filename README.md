@@ -1,17 +1,15 @@
 # GUI for Angular extension for Visual Studio Code
 
-Run Angular CLI from your browser!
+Manage your Angular CLI projects with ease!
 
 `angular-gui` extension connects your Angular CLI project with https://angular-gui.firebaseapp.com allowing you to excute CLI commands from browser.
 
 ## Features
 
-* Overview of all available command options
-* Reusable shell commands
-* Support for multiple schematics
-* Modify schematic templates
-* Access to command options that are locked in CLI
-* Configurable defaults for command options
+* Overview of all available command options with configurable defaults
+* Reusable commands with easy access to common options
+* Multiple schematics with ability to modify templates
+* Custom commands with shared options interface and access to project defaults
 
 ![Alpha release](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/angular-gui-alpha-0.1.2.gif)
 
@@ -54,13 +52,10 @@ will replace `prefix` option input from **text input** to **select box** for all
 
 ## Known Issues
 
-* Cannot change port for socket connection on client.
-* Generate `@nrwl/schematics:app` isn't working
+* Generate `@nrwl/schematics:app` is creating a wrong paths. Move files manually and update `.angular-cli.json`.
 
 ## TODO:
 
-* Add option to change port on client
-* Support for custom shell commands
 * Tests!
 
 ## Release notes and Change log

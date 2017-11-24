@@ -2,7 +2,7 @@ import { sort, type } from '../core/utils';
 
 export const build = {
   name: 'build',
-  description: 'Builds your app and places it into the output path (dist/ by default).',
+  description: 'Builds your app and places it into the output path.',
   aliases: [ 'b' ],
 
   availableOptions: [

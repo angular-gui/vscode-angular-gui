@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode';
 
-import { join, normalize, resolve } from './core/helpers';
+import { existsSync, join, normalize, resolve } from './core/helpers';
 
 import { AngularGUI } from './core/app';
 import { MESSAGE } from './core/messages';
@@ -14,8 +14,6 @@ import { defaultConfiguration } from './core/config';
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  let subscription;
-
   const config
     = vscode.workspace.getConfiguration()
       .get('angular-gui', defaultConfiguration);
@@ -31,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
   const output
     = vscode.window.createOutputChannel('GUI for Angular');
   const gui
-    = new AngularGUI(config, message => output.appendLine(message));
+    = new AngularGUI(config, message => output.appendLine(message.toString()));
   const status
     = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
   status.text = MESSAGE.STATUS_TEXT;
@@ -60,6 +58,10 @@ export function activate(context: vscode.ExtensionContext) {
         ? path
         : normalize(join(config[ 'workspaceRoot' ], path));
 
+    if (!existsSync(fullPath)) {
+      return vscode.window.showWarningMessage(MESSAGE.DOCUMENT_DOESNT_EXIST);
+    }
+
     vscode.workspace
       .openTextDocument(fullPath)
       .then(doc => vscode.window.showTextDocument(doc))
@@ -80,8 +82,9 @@ export function activate(context: vscode.ExtensionContext) {
         let a = change[ key ];
         let b = config[ key ];
         if (key === 'commandOptions') {
-          a = { ...change[ key ], collection: null };
-          b = { ...config[ key ], collection: null };
+          // collection and blueprint options are generated at runtime
+          a = { ...change[ key ], blueprint: null, collection: null };
+          b = { ...config[ key ], blueprint: null, collection: null };
         }
         return { ...dict, [ key ]: JSON.stringify(a) !== JSON.stringify(b) }
       }, {} as any);
@@ -95,6 +98,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (Object.values(changes).some(o => !!o)) {
       const change = vscode.workspace.getConfiguration('angular-gui');
+      // console.log(changes, config, change);
       gui.initialize({ ...config, ...change });
 
       if (changes.commandOptions || changes.commands) {
@@ -108,7 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
 
       if (changes.port) {
         if (gui.runner.socket) {
-          gui.runner.socket.emit('settings', change.port);
+          gui.runner.socket.emit('settings', { port: change.port });
         } else {
           vscode.window.showWarningMessage(MESSAGE.CLIENT_SHOULD_UPDATE);
         }
@@ -126,14 +130,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   const online = vscode.commands
     .registerCommand('extension.connectOnline', () =>
-      subscription = gui.start(statusUpdate)
-        .subscribe(processAction));
+      existsSync(join(config[ 'workspaceRoot' ], '.angular-cli.json'))
+        ? gui.start(statusUpdate).forEach(processAction)
+        : vscode.window.showWarningMessage(MESSAGE.CONFIG_UNAVAILABLE));
 
   const disconnect = vscode.commands
-    .registerCommand('extension.disconnect', () => {
-      gui.stop(statusUpdate);
-      if (subscription) { subscription.unsubscribe(); }
-    });
+    .registerCommand('extension.disconnect', () =>
+      gui.runner.socket
+        ? gui.stop(statusUpdate)
+        : null);
 
   const rebuild = vscode.commands
     .registerCommand('extension.rebuildConfiguration', () => {
