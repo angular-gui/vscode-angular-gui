@@ -10,5 +10,5 @@ export interface AngularGUIApp {
   logger;
   runner;
   schematics: SchematicsManager;
-  rebuild: () => void;
+  rebuild: () => Promise<void>;
 }
