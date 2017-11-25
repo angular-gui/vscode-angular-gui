@@ -1,7 +1,7 @@
 {
   "name": "angular-gui",
   "displayName": "GUI for Angular",
-  "description": "Manage your Angular CLI projects with ease!",
+  "description": "Take charge of your Angular CLI projects!",
   "version": "0.4.2",
   "publisher": "sasxa-net",
   "license": "MIT",

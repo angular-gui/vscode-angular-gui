@@ -1,17 +1,17 @@
 # GUI for Angular extension for Visual Studio Code
 
-Manage your Angular CLI projects with ease!
+## Take charge of your Angular CLI projects!
 
-`angular-gui` extension connects your Angular CLI project with https://angular-gui.firebaseapp.com allowing you to excute CLI commands from browser.
+GUI for Angular helps you manage your Angular CLI projects with ease! `angular-gui` extension connects your Angular CLI project with https://angular-gui.firebaseapp.com allowing you to excute CLI commands from browser.
 
 ## Features
 
 * Overview of all available command options with configurable defaults
-* Reusable commands with easy access to common options
+* Reusable scripts with easy access to common options
 * Multiple schematics with ability to modify templates
 * Custom commands with shared options interface and access to project defaults
 
-![Alpha release](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/angular-gui-alpha-0.1.2.gif)
+![Beta release](https://raw.githubusercontent.com/angular-gui/vscode-angular-gui/master/src/images/angular-gui-beta-0.4.2.gif)
 
 ## Activation
 
