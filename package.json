@@ -2,7 +2,7 @@
   "name": "angular-gui",
   "displayName": "GUI for Angular",
   "description": "Take charge of your Angular CLI projects!",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "publisher": "sasxa-net",
   "license": "MIT",
   "repository": {
@@ -153,12 +153,15 @@
   "dependencies": {
     "@angular-devkit/core": "0.0.21",
     "@angular-devkit/schematics": "0.0.37",
+    "@ngtools/json-schema": "1.1.0",
     "ansi-to-html": "0.6.3",
     "express": "4.16.2",
+    "minimist": "1.2.0",
     "ps-tree": "1.1.0",
     "rxjs": "5.5.2",
     "shelljs": "0.7.8",
     "socket.io": "2.0.4",
+    "source-map": "0.5.6",
     "stoppable": "1.0.4",
     "typescript": "2.6.1"
   }

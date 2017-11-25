@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to the "angular-gui" extension will be documented in this file.
 
+# Version 0.4.3: 
+* Fix: Inlcude `@angular-devkit` dependencies in the package
+
 # Version 0.4.2: Minor fixes
 * Fix: Race condition when rebuilding client configuration
 * Fix: Check if file exists before opening it
