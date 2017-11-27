@@ -4,6 +4,10 @@
 
 GUI for Angular helps you manage your Angular CLI projects with ease! `angular-gui` extension connects your Angular CLI project with https://angular-gui.firebaseapp.com allowing you to excute CLI commands from browser.
 
+## How it works?
+
+`angular-gui` extension listens for commands from GUI for Angular client over socket connection and executes them in your workspace via node's `child_process` or via `@angular-devkit/schematics` for `ng generate` commands.
+
 ## Features
 
 * Overview of all available command options with configurable defaults

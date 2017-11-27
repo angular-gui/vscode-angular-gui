@@ -129,7 +129,7 @@ export class CommandRunner {
     const options
       = command.options
         .filter(o => o.name !== 'name')
-        // .concat({ name: 'source-dir', value: '../../src' })
+    // .concat({ name: 'source-dir', value: '../../src' })
     const value
       = `ng generate app ${ name }`;
     const script
@@ -191,7 +191,7 @@ export class CommandRunner {
     this.app.logger(MESSAGE.SAVE_START(name));
 
     const script
-      = command.description
+      = 'description' in command
         ? `# ${ command.description } \n` + command.script
         : command.script;
 

@@ -25,7 +25,7 @@ export const MESSAGE = {
   KILL_SUCCESS: name => `Terminated script: ${ name }`,
 
   REBUILD_START: 'Rebuilding client configuration...',
-  REBUILD_FINISH: 'Rebuilding complete.',
+  REBUILD_FINISH: 'Building complete.',
 
   SAVE_START: name => `Saving script: ${ name }.sh`,
   SAVE_SUCCESS: name => `Saved script: ${ name }.sh`,

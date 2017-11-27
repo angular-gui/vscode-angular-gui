@@ -47,7 +47,7 @@ export class SchematicsManager {
         ...generateCommandValues(schematic, options),
         ...generateCommandPaths(schematic, options, this.cliConfig, this.workspaceRoot),
       };
-      // console.log('TRANSFORMED:', schematic.name, transformed);
+      console.log('TRANSFORMED:', schematic.name, transformed);
       return transformed;
     });
   }

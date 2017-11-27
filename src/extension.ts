@@ -9,7 +9,7 @@ import { existsSync, join, normalize, resolve } from './core/helpers';
 
 import { AngularGUI } from './core/app';
 import { MESSAGE } from './core/messages';
-import { defaultConfiguration } from './core/config';
+import defaultConfiguration from './core/config';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed

@@ -32,7 +32,7 @@ export class FilesManager {
     this.extensionRoot = this.config.extensionRoot;
     this.workspaceRoot = this.config.workspaceRoot;
 
-    if (this.extensionRoot.includes('extensions')) {
+    if (this.extensionRoot.includes('sasxa-net.angular-gui')) {
       this.extensionRootDir = '';
     }
 

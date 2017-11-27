@@ -1,4 +1,4 @@
-export const defaultConfiguration = {
+export default {
   port: 4300,
   rootDir: '.angular-gui',
   npmRunner: '.',

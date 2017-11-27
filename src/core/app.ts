@@ -30,7 +30,7 @@ export class AngularGUI implements AngularGUIApp {
   constructor(public config, public logger) {
     this.app = express().get('/', (req, res) => res.sendStatus(202));
     this.runner = new CommandRunner(this);
-    this.initialize(config);
+    // this.initialize(config);
   }
 
   start(statusUpdate) {
@@ -122,7 +122,9 @@ export class AngularGUI implements AngularGUIApp {
       = await this.files.cliConfig;
 
     const defaultCollection
-      = cliConfig.defaults.schematics
+      = cliConfig
+        && cliConfig.defaults
+        && cliConfig.defaults.schematics
         ? cliConfig.defaults.schematics.collection
         : '@schematics/angular';
 
