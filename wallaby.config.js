@@ -2,8 +2,9 @@ module.exports = function (wallaby) {
   return {
     files: [
       'src/**/*.ts*',
-      { pattern: 'src/test/**/*', load: false },
-      { pattern: 'src/test/**/.angular-cli.json', load: false },
+      { pattern: 'files/**', load: false },
+      { pattern: 'files/sch*/**', ignore: true },
+      { pattern: 'files/**/.angular-cli.json', load: false },
       { pattern: 'src/**/*.spec.ts*', ignore: true },
       { pattern: 'src/schematics/**', ignore: true },
     ],
@@ -11,11 +12,12 @@ module.exports = function (wallaby) {
       type: 'node'
     },
     filesWithNoCoverageCalculated: [
-      'src/test',
+      'files/**',
+      'src/test.ts'
     ],
     tests: [
       'src/**/*.spec.ts*',
-      { pattern: 'src/test/**', ignore: true },
+      { pattern: 'files/**', ignore: true },
     ],
     testFramework: 'jasmine'
   }

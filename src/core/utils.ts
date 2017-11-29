@@ -26,11 +26,12 @@ export function type(o) {
   };
 }
 
-export function omitBy<T>(source: T, filter: (o: T, ...rest) => boolean): T {
-  return Object.entries(source)
-    .filter(([ key, value ]) => !filter(value, key))
-    .reduce((dict, [ key, value ]) =>
-      ({ ...dict, [ key ]: value }), {} as any);
+export function omitBy<T>(source: T, filter: (value: any, key: string) => boolean): Partial<T> {
+  return typeof source !== 'object' || source === null
+    ? source
+    : Object.entries(source)
+      .filter(([ key, value ]) => !filter(value, key))
+      .reduce((dict, [ key, value ]) => ({ ...dict, [ key ]: value }), {} as any);
 }
 
 export function uniqueFn<T>(value: T, index: number, array: T[]) {

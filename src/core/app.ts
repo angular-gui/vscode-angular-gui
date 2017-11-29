@@ -116,7 +116,12 @@ export class AngularGUI implements AngularGUIApp {
   }
 
   async initialize(config) {
-    this.files = new FilesManager(this.config = config);
+    this.files
+      = new FilesManager(this.config = config);
+    this.schematics
+      = new SchematicsManager(
+        this.files.workspaceRoot,
+        this.files.workspaceSchematicsFolder);
 
     const cliConfig
       = await this.files.cliConfig;
@@ -134,11 +139,7 @@ export class AngularGUI implements AngularGUIApp {
         .filter(uniqueFn);
 
     this.schematics
-      = new SchematicsManager(
-        this.config.commandOptions.collection,
-        cliConfig,
-        this.files.workspaceRoot,
-        this.files.workspaceSchematicsFolder);
+      .initialize(cliConfig, this.config.commandOptions.collection);
   }
 
   private async clientConfig() {

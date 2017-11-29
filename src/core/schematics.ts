@@ -30,22 +30,23 @@ import { of } from 'rxjs/observable/of';
 
 export class SchematicsManager {
   private _blueprints;
+  collections: string[];
   engine;
   host;
 
   constructor(
-    public collections: string[],
-    private cliConfig,
     private workspaceRoot: string,
-    private workspaceSchematicsFolder: string) {
+    private workspaceSchematicsFolder: string) { }
 
-    this.host = new NodeModulesEngineHost();
+  initialize(cliConfig, collections: string[], host = NodeModulesEngineHost) {
+    this.host = new host();
     this.engine = new SchematicEngine(this.host);
+    this.collections = collections;
     this.host.registerOptionsTransform((schematic: FileSystemSchematicDesc, options: {}) => {
       const transformed = {
-        ...generateCommandDefaults(schematic, options, this.cliConfig),
+        ...generateCommandDefaults(schematic, options, cliConfig),
         ...generateCommandValues(schematic, options),
-        ...generateCommandPaths(schematic, options, this.cliConfig, this.workspaceRoot),
+        ...generateCommandPaths(schematic, options, cliConfig, this.workspaceRoot),
       };
       console.log('TRANSFORMED:', schematic.name, transformed);
       return transformed;

@@ -1,6 +1,6 @@
 import 'rxjs/add/observable/throw';
 
-import { setup, versions } from '../test';
+import { setupWithoutSchematics, versions } from '../test';
 
 import { AngularGUIApp } from './app.interface';
 import { CommandRunner } from './runner';
@@ -17,7 +17,7 @@ describe('CommandRunner', () => {
   const success = [ 'success', jasmine.any(Object) ];
 
   beforeEach(async () => {
-    gui = setup('');
+    gui = setupWithoutSchematics();
     await gui.initialize(gui.config);
     runner = gui.runner;
   });

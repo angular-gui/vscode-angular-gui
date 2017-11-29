@@ -15,6 +15,8 @@ import {
 
 import { uniqueFn } from './utils';
 
+const EXTENSION_UNIQUE_IDENTIFIER = 'sasxa-net.angular-gui';
+
 /**
  * Exposes file system commands for specific files
  */
@@ -32,7 +34,7 @@ export class FilesManager {
     this.extensionRoot = this.config.extensionRoot;
     this.workspaceRoot = this.config.workspaceRoot;
 
-    if (this.extensionRoot.includes('sasxa-net.angular-gui')) {
+    if (this.extensionRoot.includes(EXTENSION_UNIQUE_IDENTIFIER)) {
       this.extensionRootDir = '';
     }
 
@@ -69,7 +71,7 @@ export class FilesManager {
             : null;
         })
         .filter(o => !!o)
-        .map(o => copyFolder(o.source, o.target))
+        .map(o => copyFolder(o.source, o.target));
 
     return Promise.all(promises);
   }
@@ -95,26 +97,31 @@ export class FilesManager {
     return Promise.all(promises);
   }
 
+  private updateRunnerScript(data) {
+    if (!data) { return data; }
+    const alias = this.config.npmRunner;
+    const shouldUpdatePackageJson
+      = !data.scripts
+      || !(alias in data.scripts)
+      || data.scripts[ alias ].includes('.runner.sh');
+
+    if (shouldUpdatePackageJson) {
+      const command = `sh ${ this.config.rootDir }/.runner.sh`;
+      const scripts = { [ alias ]: command, ...data.scripts };
+      return { ...data, scripts };
+    } else {
+      return data;
+    }
+  };
+
   createRunnerScript() {
     const script = `script=$1\nshift\nsh ${ this.config.rootDir }/commands/$script.sh $@`;
     const filename = join(this.workspaceRootDir, '.runner.sh');
     const packagePath = join(this.workspaceRoot, 'package.json');
     return writeFile(filename, script)
-      .then(() => updateJson<any>(packagePath, data => {
-        const alias = this.config.npmRunner;
-        const shouldUpdatePackageJson
-          = !data.scripts
-          || !(alias in data.scripts)
-          || data.scripts[ alias ].includes('.runner.sh');
-
-        if (shouldUpdatePackageJson) {
-          const command = `sh ${ this.config.rootDir }/.runner.sh`;
-          const scripts = { [ alias ]: command, ...data.scripts };
-          return { ...data, scripts };
-        } else {
-          return data;
-        }
-      }));
+      .then(() =>
+        updateJson<any>(packagePath, data =>
+          this.updateRunnerScript(data)));
   }
 
   saveClientConfig(data) {
