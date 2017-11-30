@@ -2,9 +2,7 @@ module.exports = function (wallaby) {
   return {
     files: [
       'src/**/*.ts*',
-      { pattern: 'files/**', load: false },
-      { pattern: 'files/sch*/**', ignore: true },
-      { pattern: 'files/**/.angular-cli.json', load: false },
+      { pattern: 'files/**', instrument: false },
       { pattern: 'src/**/*.spec.ts*', ignore: true },
       { pattern: 'src/schematics/**', ignore: true },
     ],
