@@ -149,7 +149,7 @@ export class FilesManager {
   }
 
   get cliConfig() {
-    const filename = join(this.workspaceRoot, '.angular-cli.json');
+    const filename = join(this.workspaceRoot, 'angular.json');
     return readFile(filename);
   }
 
